@@ -4,7 +4,9 @@ import { AdminAPI } from "../../api/AdminApi";
 const AddDoctorPage = () => {
   const [doctors, setDoctors] = useState([]);
   const [loading, setLoading] = useState(false);
-
+  const [doctorName, setDoctorName] = useState("");
+  const [specialization, setSpecialization] = useState("");
+  const [status, setStatus] = useState("");
   // ✅ Form state (MATCH BACKEND DTO)
   const [form, setForm] = useState({
     name: "",
@@ -37,8 +39,8 @@ const AddDoctorPage = () => {
   const fetchDoctors = async () => {
     try {
       setLoading(true);
-      const res = await AdminAPI.getAllDoctors();
-      setDoctors(res.data.data.content);
+      const res = await AdminAPI.getDoctors(doctorName, specialization, status);
+      setDoctors(res.data.content);
     } catch (err) {
       console.error("Fetch error:", err);
     } finally {
@@ -114,6 +116,9 @@ const AddDoctorPage = () => {
     setIsEdit(false);
     setSelectedId(null);
   };
+  useEffect(() => {
+    fetchDoctors();
+  }, [doctorName, specialization, status]);
 
   return (
     <div className="p-6 space-y-6">
@@ -177,6 +182,25 @@ const AddDoctorPage = () => {
 
       {/* ✅ Table */}
       <div className="bg-white shadow rounded overflow-x-auto">
+
+        <div>
+            <input type="text" placeholder="Search by name..." value={doctorName} onChange={(e)=>setDoctorName(e.target.value)} className="border px-3 py-2 m-4"/>
+            <select value={specialization} onChange={(e)=>setSpecialization(e.target.value)} className="border px-3 py-2 m-4">
+              <option value="">All Specializations</option>
+              {SPECIALIZATIONS.map((spec) => (
+                <option key={spec} value={spec}>{spec}</option>
+              ))}
+            </select>
+            <select value={status} onChange={(e)=>setStatus(e.target.value)} className="border px-3 py-2 m-4">
+              <option value="">All Statuses</option>
+              <option value="ACTIVE">Active</option>
+              <option value="INACTIVE">Inactive</option>
+            </select>
+        </div>
+        <div className="p-4 border-b">
+          <h2 className="text-lg font-semibold">Doctors List</h2>
+        </div>  
+
         <table className="min-w-full">
           <thead className="bg-gray-100">
             <tr>

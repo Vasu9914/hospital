@@ -2,55 +2,77 @@ import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { AvailabilityAPI } from "../../api/AvailabilityApi";
 import { SlotAPI } from "../../api/SlotApi";
+import { formatTime, formatDate } from "../../utils/helper";
+
+// ✅ Status badge
+const statusBadge = (status) => {
+  const map = {
+    ACTIVE: "bg-green-500 text-white",
+    INACTIVE: "bg-red-500 text-white",
+  };
+
+  return (
+    <span className={`px-3 py-1 rounded-md text-xs font-semibold ${map[status]}`}>
+      {status}
+    </span>
+  );
+};
+
+// ✅ Slot colors
+const slotColors = {
+  AVAILABLE: "bg-green-500 text-white",
+  BOOKED: "bg-blue-500 text-white",
+  CANCELLED: "bg-red-500 text-white",
+};
 
 export function AvailabilityPage() {
   const navigate = useNavigate();
   const { doctorId } = useParams();
 
-  const [data, setData] = useState([]); // ✅ FIXED (missing)
-  const [slotsMap, setSlotsMap] = useState({}); // ✅ store slots per availability
-  const [loadingSlots, setLoadingSlots] = useState({}); // loading per row
+  const [data, setData] = useState([]);
+  const [slotsMap, setSlotsMap] = useState({});
+  const [loadingSlots, setLoadingSlots] = useState({});
+  const [loading, setLoading] = useState(false);
 
   const [pageInfo, setPageInfo] = useState({
     page: 0,
     size: 5,
     totalPages: 0,
-    totalElements: 0,
   });
 
   const [filters, setFilters] = useState({
-    doctorId: doctorId || "",
     startDate: "",
     endDate: "",
     availabilityStatus: "",
   });
 
-  const [loading, setLoading] = useState(false);
+  // 🔥 ADD MODAL STATE
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [form, setForm] = useState({
+    date: "",
+    startTime: "",
+    endTime: "",
+  });
 
-  // ================= FETCH AVAILABILITY =================
+  // ---------------- FETCH ----------------
   const fetchAvailability = async (page = 0) => {
-    if (!filters.doctorId) return;
-
     try {
       setLoading(true);
 
-      const response = await AvailabilityAPI.get(
+      const res = await AvailabilityAPI.get(
         doctorId,
-        filters.startDate,
-        filters.endDate,
-        filters.availabilityStatus,
+        filters.startDate || null,
+        filters.endDate || null,
+        filters.availabilityStatus || null,
         page,
         pageInfo.size
       );
 
-      const res = response.data;
-
-      setData(res.content);
+      setData(res.data.content);
       setPageInfo({
-        page: res.page,
-        size: res.size,
-        totalPages: res.totalPages,
-        totalElements: res.totalElements,
+        page: res.data.page,
+        size: res.data.size,
+        totalPages: res.data.totalPages,
       });
     } catch (err) {
       console.error(err);
@@ -59,17 +81,21 @@ export function AvailabilityPage() {
     }
   };
 
-  // ================= FETCH SLOTS =================
+  // ---------------- FETCH SLOTS ----------------
   const fetchSlots = async (availabilityId) => {
+    if (slotsMap[availabilityId]) {
+      setSlotsMap((prev) => {
+        const n = { ...prev };
+        delete n[availabilityId];
+        return n;
+      });
+      return;
+    }
+
     try {
       setLoadingSlots((prev) => ({ ...prev, [availabilityId]: true }));
-
       const res = await SlotAPI.getslotsbyavailability(availabilityId);
-      console.log("Slots for availability", availabilityId, res.data);
-      setSlotsMap((prev) => ({
-        ...prev,
-        [availabilityId]: res.data, // store slots
-      }));
+      setSlotsMap((prev) => ({ ...prev, [availabilityId]: res.data }));
     } catch (err) {
       console.error(err);
     } finally {
@@ -77,10 +103,9 @@ export function AvailabilityPage() {
     }
   };
 
-  // ================= DELETE =================
+  // ---------------- DELETE ----------------
   const deleteAvailability = async (id) => {
     if (!window.confirm("Delete this availability?")) return;
-
     try {
       await AvailabilityAPI.delete(id);
       fetchAvailability(pageInfo.page);
@@ -89,130 +114,153 @@ export function AvailabilityPage() {
     }
   };
 
-  // ================= AUTO FILTER =================
-  useEffect(() => {
-    const delay = setTimeout(() => {
-      fetchAvailability(0);
-    }, 400);
+  // ---------------- ADD AVAILABILITY ----------------
+  const handleFormChange = (e) => {
+    setForm({
+      ...form,
+      [e.target.name]: e.target.value,
+    });
+  };
 
-    return () => clearTimeout(delay);
+  const handleAddAvailability = async () => {
+    if (!form.date || !form.startTime || !form.endTime) {
+      alert("All fields required");
+      return;
+    }
+
+    if (form.startTime >= form.endTime) {
+      alert("End time must be after start time");
+      return;
+    }
+
+    try {
+      await AvailabilityAPI.add({
+        doctorId,
+        ...form,
+      });
+
+      setForm({
+        date: "",
+        startTime: "",
+        endTime: "",
+      });
+
+      setShowAddModal(false);
+
+      fetchAvailability(0);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  useEffect(() => {
+    const t = setTimeout(() => fetchAvailability(0), 300);
+    return () => clearTimeout(t);
   }, [filters]);
 
-  const handleFilterChange = (e) => {
-    setFilters({ ...filters, [e.target.name]: e.target.value });
-  };
-
-  const goToPage = (newPage) => {
-    if (newPage < 0 || newPage >= pageInfo.totalPages) return;
-    fetchAvailability(newPage);
-  };
-
-  // ================= UI =================
   return (
-    <div className="p-6 bg-gray-100 min-h-screen">
-      <div className="max-w-6xl mx-auto bg-white shadow-md rounded-xl p-6">
+    <div className="min-h-screen bg-gray-100 p-6">
 
-        {/* HEADER */}
-        <div className="flex justify-between items-center mb-6">
-          <div>
-            <button onClick={() => navigate(-1)} className="text-blue-600 text-sm mb-2">
-              ← Back
-            </button>
-            <h2 className="text-2xl font-bold">
-              Doctor Availability (ID: {doctorId})
-            </h2>
-          </div>
-        </div>
+      {/* Header + Add Button */}
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-xl font-semibold">
+          Doctor Availability (ID: {doctorId})
+        </h2>
 
-        {/* FILTERS */}
-        <div className="flex gap-4 mb-6">
-          <input type="date" name="startDate" value={filters.startDate} onChange={handleFilterChange} className="border p-2 rounded"/>
-          <input type="date" name="endDate" value={filters.endDate} onChange={handleFilterChange} className="border p-2 rounded"/>
+       <button
+          onClick={() => setShowAddModal(true)}
+          className="px-4 py-2 bg-green-600 text-white rounded"
+        >
+          + Add Availability
+        </button>
+      </div>
 
-          <select name="availabilityStatus" value={filters.availabilityStatus} onChange={handleFilterChange} className="border p-2 rounded">
-            <option value="">All</option>
-            <option value="ACTIVE">ACTIVE</option>
-            <option value="INACTIVE">INACTIVE</option>
-          </select>
-        </div>
+      {/* Filters */}
+      <div className="flex gap-4 mb-6 flex-wrap">
+        <input
+          type="date"
+          className="px-3 py-2 border rounded-md bg-white"
+          value={filters.startDate}
+          onChange={(e) =>
+            setFilters({ ...filters, startDate: e.target.value })
+          }
+        />
 
-        {/* TABLE */}
-        <table className="w-full border">
+        <input
+          type="date"
+          className="px-3 py-2 border rounded-md bg-white"
+          value={filters.endDate}
+          onChange={(e) =>
+            setFilters({ ...filters, endDate: e.target.value })
+          }
+        />
+
+        <select
+          className="px-3 py-2 border rounded-md bg-white"
+          value={filters.availabilityStatus}
+          onChange={(e) =>
+            setFilters({ ...filters, availabilityStatus: e.target.value })
+          }
+        >
+          <option value="">All</option>
+          <option value="ACTIVE">Active</option>
+          <option value="INACTIVE">Inactive</option>
+        </select>
+      </div>
+
+      {/* Table */}
+      <div className="bg-white rounded-lg shadow overflow-hidden">
+        <table className="w-full text-sm">
           <thead className="bg-gray-200">
             <tr>
-              <th>ID</th>
-              <th>Date</th>
-              <th>Start</th>
-              <th>End</th>
-              <th>Status</th>
-              <th>Actions</th>
+              {["ID", "Date", "Start", "End", "Status", "Actions"].map((h) => (
+                <th key={h} className="px-6 py-3 text-left">{h}</th>
+              ))}
             </tr>
           </thead>
 
           <tbody>
-            {data.map((item) => (
+            {loading ? (
+              <tr><td colSpan={6} className="text-center py-6">Loading...</td></tr>
+            ) : data.map((item) => (
               <React.Fragment key={item.id}>
-                {/* AVAILABILITY ROW */}
-                <tr className="border-t">
-                  <td>{item.id}</td>
-                  <td>{item.date}</td>
-                  <td>{item.startTime}</td>
-                  <td>{item.endTime}</td>
+                <tr className="border-t hover:bg-gray-50">
+                  <td className="px-6 py-4">{item.id}</td>
+                  <td className="px-6 py-4">{formatDate(item.date)}</td>
+                  <td className="px-6 py-4">{formatTime(item.startTime)}</td>
+                  <td className="px-6 py-4">{formatTime(item.endTime)}</td>
+                  <td className="px-6 py-4">{statusBadge(item.availabilityStatus)}</td>
 
-                  <td>
-                    <span className={item.availabilityStatus === "ACTIVE" ? "text-green-600" : "text-red-600"}>
-                      {item.availabilityStatus}
-                    </span>
-                  </td>
-
-                  <td className="flex gap-2">
+                  <td className="px-6 py-4 flex gap-2">
                     <button
                       onClick={() => fetchSlots(item.id)}
-                      className="bg-blue-500 text-white px-2 py-1 rounded"
+                      className="px-3 py-1 bg-blue-600 text-white rounded"
                     >
-                      Show Slots
+                      {slotsMap[item.id] ? "Hide" : "Slots"}
                     </button>
 
-                    {item.availabilityStatus === "ACTIVE" && (
-                      <button
-                        onClick={() => deleteAvailability(item.id)}
-                        className="bg-red-500 text-white px-2 py-1 rounded"
-                      >
-                        Delete
-                      </button>
-                    )}
+                    <button
+                      onClick={() => deleteAvailability(item.id)}
+                      className="px-3 py-1 bg-red-500 text-white rounded"
+                    >
+                      Delete
+                    </button>
                   </td>
                 </tr>
 
-                {/* SLOTS ROW */}
+                {/* Slots */}
                 {slotsMap[item.id] && (
                   <tr>
-                    <td colSpan="6">
-                      <div className="bg-gray-50 p-3">
-                        {loadingSlots[item.id] ? (
-                          <p>Loading slots...</p>
-                        ) : (
-                          <div className="grid grid-cols-4 gap-2">
-                            {slotsMap[item.id].map((slot) => (
-                              <div
-                                key={slot.slotId}
-                                className={`p-2 rounded text-center text-sm ${
-                                  slot.slotStatus === "AVAILABLE"
-                                    ? "bg-green-100"
-                                    : slot.slotStatus === "BOOKED"
-                                    ? "bg-blue-100"
-                                    : "bg-red-100"
-                                }`}
-                              >
-                                {slot.startTime} - {slot.endTime}
-                                <br />
-                                <span className="text-xs">
-                                  {slot.slotStatus}
-                                </span>
-                              </div>
-                            ))}
+                    <td colSpan={6} className="bg-gray-50 p-4">
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                        {slotsMap[item.id].map((slot) => (
+                          <div
+                            key={slot.slotId}
+                            className={`p-2 rounded text-center ${slotColors[slot.slotStatus]}`}
+                          >
+                            {formatTime(slot.startTime)} – {formatTime(slot.endTime)}
                           </div>
-                        )}
+                        ))}
                       </div>
                     </td>
                   </tr>
@@ -221,20 +269,45 @@ export function AvailabilityPage() {
             ))}
           </tbody>
         </table>
-
-        {/* PAGINATION */}
-        <div className="flex justify-between mt-4">
-          <button disabled={pageInfo.page === 0} onClick={() => goToPage(pageInfo.page - 1)}>
-            Prev
-          </button>
-
-          <span>Page {pageInfo.page + 1} / {pageInfo.totalPages}</span>
-
-          <button disabled={pageInfo.page + 1 >= pageInfo.totalPages} onClick={() => goToPage(pageInfo.page + 1)}>
-            Next
-          </button>
-        </div>
       </div>
+
+      {/* 🔥 ADD MODAL */}
+      {showAddModal && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center">
+
+          <div className="bg-white p-6 rounded-lg w-[400px]">
+
+            <h3 className="text-lg font-semibold mb-4">
+              Add Availability
+            </h3>
+
+            <div className="space-y-3">
+
+              <input type="date" name="date" value={form.date}
+                onChange={handleFormChange} className="w-full border p-2 rounded" />
+
+              <input type="time" name="startTime" value={form.startTime}
+                onChange={handleFormChange} className="w-full border p-2 rounded" />
+
+              <input type="time" name="endTime" value={form.endTime}
+                onChange={handleFormChange} className="w-full border p-2 rounded" />
+
+            </div>
+
+            <div className="flex justify-end gap-2 mt-4">
+              <button onClick={() => setShowAddModal(false)} className="px-3 py-1 bg-gray-200 rounded">
+                Cancel
+              </button>
+
+              <button onClick={handleAddAvailability} className="px-3 py-1 bg-green-600 text-white rounded">
+                Save
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

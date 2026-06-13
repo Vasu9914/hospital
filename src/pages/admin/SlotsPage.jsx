@@ -98,96 +98,111 @@ export default function SlotsPage() {
       <h2 className="text-2xl font-semibold mb-6">Slots</h2>
 
       {/* FILTERS */}
-      <div className="flex flex-wrap gap-3 mb-6 relative">
+   {/* 🔍 FILTER CARD */}
+<div className="bg-white p-4 rounded-xl shadow-sm mb-6">
 
-        {/* Doctor Search */}
-        <div className="relative">
-          <input
-            type="text"
-            placeholder="Search Doctor"
-            value={doctorName}
-            onChange={(e) => {
-              setDoctorName(e.target.value);
-            }}
-            className="border px-3 py-2 rounded-lg w-60"
-          />
+  <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
 
-          {/* Dropdown */}
-          {doctorName && (
-            <div className="absolute bg-white border w-full shadow z-10 max-h-40 overflow-y-auto">
-              {doctors
-                .filter((doc) =>
-                  doc.doctorName
-                    .toLowerCase()
-                    .includes(doctorName.toLowerCase())
-                )
-                .map((doc) => (
-                  <div
-                    key={doc.doctorId}
-                    onClick={() => {
-                      setDoctorName(doc.doctorName);
-                      setDoctorId(doc.doctorId); // ✅ important
-                      setPage(0);                    
-                    }}
-                    className="p-2 hover:bg-gray-100 cursor-pointer"
-                  >
-                    {doc.doctorName}
-                  </div>
-                ))}
-            </div>
-          )}
+    {/* Doctor */}
+    <div className="relative">
+      <label className="text-xs text-gray-500 mb-1 block">Doctor</label>
+
+      <input
+        type="text"
+        placeholder="Search doctor..."
+        value={doctorName}
+        onChange={(e) => setDoctorName(e.target.value)}
+        className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+      />
+
+      {doctorName && (
+        <div className="absolute bg-white border w-full mt-1 rounded-lg shadow z-20 max-h-40 overflow-y-auto">
+          {doctors
+            .filter((doc) =>
+              doc.doctorName.toLowerCase().includes(doctorName.toLowerCase())
+            )
+            .map((doc) => (
+              <div
+                key={doc.doctorId}
+                onClick={() => {
+                  setDoctorName(doc.doctorName);
+                  setDoctorId(doc.doctorId);
+                  setPage(0);
+                }}
+                className="px-3 py-2 hover:bg-gray-100 cursor-pointer"
+              >
+                {doc.doctorName}
+              </div>
+            ))}
         </div>
+      )}
+    </div>
 
-        {/* Date Filters */}
-        <input
-          type="date"
-          value={startDate}
-          onChange={(e) => {
-            setStartDate(e.target.value);
-            setPage(0);
-          }}
-          className="border px-3 py-2 rounded-lg"
-        />
+    {/* Start Date */}
+    <div>
+      <label className="text-xs text-gray-500 mb-1 block">Start Date</label>
+      <input
+        type="date"
+        value={startDate}
+        onChange={(e) => {
+          setStartDate(e.target.value);
+          setPage(0);
+        }}
+        className="w-full px-3 py-2 border rounded-lg"
+      />
+    </div>
 
-        <input
-          type="date"
-          value={endDate}
-          onChange={(e) => {
-            setEndDate(e.target.value);
-            setPage(0);
-          }}
-          className="border px-3 py-2 rounded-lg"
-        />
+    {/* End Date */}
+    <div>
+      <label className="text-xs text-gray-500 mb-1 block">End Date</label>
+      <input
+        type="date"
+        value={endDate}
+        onChange={(e) => {
+          setEndDate(e.target.value);
+          setPage(0);
+        }}
+        className="w-full px-3 py-2 border rounded-lg"
+      />
+    </div>
 
-        {/* Status Filter */}
-        <select
-          value={slotStatus}
-          onChange={(e) => {
-            setSlotStatus(e.target.value);
-            setPage(0);
-          }}
-          className="border px-3 py-2 rounded-lg"
-        >
-          <option value="">All Status</option>
-          <option value="AVAILABLE">AVAILABLE</option>
-          <option value="BOOKED">BOOKED</option>
-          <option value="CANCELLED">CANCELLED</option>
-        </select>
+    {/* Status */}
+    <div>
+      <label className="text-xs text-gray-500 mb-1 block">Status</label>
+      <select
+        value={slotStatus}
+        onChange={(e) => {
+          setSlotStatus(e.target.value);
+          setPage(0);
+        }}
+        className="w-full px-3 py-2 border rounded-lg"
+      >
+        <option value="">All</option>
+        <option value="AVAILABLE">Available</option>
+        <option value="BOOKED">Booked</option>
+        <option value="CANCELLED">Cancelled</option>
+      </select>
+    </div>
 
-        {/* Clear Button */}
-        <button
-          onClick={() => {
-            setDoctorName("");
-            setDoctorId("");
-            setStartDate("");
-            setEndDate("");
-            setSlotStatus("");
-          }}
-          className="px-3 py-2 bg-gray-200 rounded"
-        >
-          Clear
-        </button>
-      </div>
+    {/* Clear */}
+    <div className="flex items-end">
+      <button
+        onClick={() => {
+          setDoctorName("");
+          setDoctorId("");
+          setStartDate("");
+          setEndDate("");
+          setSlotStatus("");
+          setPage(0);
+        }}
+        className="w-full px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300"
+      >
+        Clear
+      </button>
+    </div>
+
+  </div>
+</div>
 
       {/* TABLE */}
       <div className="bg-white rounded-xl shadow overflow-hidden">

@@ -1,36 +1,48 @@
 import React, { useEffect, useState } from "react";
 import { AdminAPI } from "../../api/AdminApi";
 
+const SPECIALIZATIONS = [
+  "cardiology", "dermatology", "neurology",
+  "pediatrics", "psychiatry", "radiology", "Surgery",
+];
+
+// 🔥 Card Component
+const Card = ({ title, value, color }) => {
+  const colorMap = {
+    blue: "text-blue-600",
+    green: "text-green-600",
+    red: "text-red-500",
+    purple: "text-violet-600",
+  };
+
+  return (
+    <div className="bg-white rounded-2xl shadow-sm p-5 border hover:shadow-md transition">
+      <p className="text-sm text-gray-500">{title}</p>
+      <p className={`text-2xl font-semibold mt-1 ${colorMap[color]}`}>
+        {value ?? 0}
+      </p>
+    </div>
+  );
+};
+
 export const Dashboard = () => {
   const [stats, setStats] = useState([]);
   const [dashboard, setDashboard] = useState({});
   const [loading, setLoading] = useState(false);
 
-  // ✅ Filters
   const [filters, setFilters] = useState({
-    doctorName: null,
-    specialization: null,
-    startDate: null,
-    endDate: null,
+    doctorName: "",
+    specialization: "",
+    startDate: "",
+    endDate: "",
   });
 
-  // ✅ Static specialization (BEST UX)
-  const SPECIALIZATIONS = [
-    "cardiology",
-    "dermatology",
-    "neurology",
-    "pediatrics",
-    "psychiatry",
-    "radiology",
-    "Surgery",
-  ];
-
-  // ✅ Pagination
   const [page, setPage] = useState(0);
-  const [size] = useState(5);
   const [totalPages, setTotalPages] = useState(0);
 
-  // ✅ Dashboard Cards
+  const SIZE = 5;
+
+  // 🔹 Fetch dashboard cards
   const fetchDashboard = async () => {
     try {
       const res = await AdminAPI.getDashboard();
@@ -40,25 +52,22 @@ export const Dashboard = () => {
     }
   };
 
-  // ✅ Stats API
+  // 🔹 Fetch table stats
   const fetchStats = async () => {
     try {
       setLoading(true);
 
       const res = await AdminAPI.getStats(
-        filters.doctorName,
-        filters.specialization,
-        filters.startDate,
-        filters.endDate,
+        filters.doctorName || null,
+        filters.specialization || null,
+        filters.startDate || null,
+        filters.endDate || null,
         page,
-        size
+        SIZE
       );
-      console.log("Stats API Response:", res.data);
 
-      const data = res.data;
-
-      setStats(data.content);
-      setTotalPages(data.totalPages);
+      setStats(res.data.content);
+      setTotalPages(res.data.totalPages);
     } catch (err) {
       console.error(err);
     } finally {
@@ -66,18 +75,15 @@ export const Dashboard = () => {
     }
   };
 
-  // ✅ Reset page when filters change
+  // Reset page when filters change
   useEffect(() => {
     setPage(0);
   }, [filters]);
 
-  // ✅ Auto search (debounce)
+  // Debounce API call
   useEffect(() => {
-    const delay = setTimeout(() => {
-      fetchStats();
-    }, 400);
-
-    return () => clearTimeout(delay);
+    const t = setTimeout(fetchStats, 400);
+    return () => clearTimeout(t);
   }, [filters, page]);
 
   useEffect(() => {
@@ -85,100 +91,114 @@ export const Dashboard = () => {
   }, []);
 
   return (
-    <div className="p-6 space-y-6">
-      <h1 className="text-2xl font-bold">Admin Dashboard</h1>
+    <div className="min-h-screen bg-gray-50 p-6">
+      {/* Title */}
+      <h2 className="text-xl font-semibold text-gray-800 mb-6">
+        Admin Dashboard
+      </h2>
 
-      {/* ✅ Dashboard Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      {/* 🔥 Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         <Card title="Total Doctors" value={dashboard.totalDoctors} color="blue" />
         <Card title="Active Doctors" value={dashboard.activeDoctors} color="green" />
         <Card title="Inactive Doctors" value={dashboard.inactiveDoctors} color="red" />
         <Card title="Appointments" value={dashboard.totalAppointments} color="purple" />
       </div>
 
-      {/* ✅ Filters */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 bg-white p-4 rounded shadow">
+      {/* 🔍 Filters */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6 bg-white p-5 rounded-2xl border shadow-sm">
         <input
           type="text"
-          placeholder="Doctor Name"
-          className="border p-2 rounded"
+          placeholder="Doctor name"
           value={filters.doctorName}
           onChange={(e) =>
             setFilters({ ...filters, doctorName: e.target.value })
           }
+          className="border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
 
         <select
-          className="border p-2 rounded"
           value={filters.specialization}
           onChange={(e) =>
             setFilters({ ...filters, specialization: e.target.value })
           }
+          className="border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
-          <option value={null}>All Specializations</option>
-          {SPECIALIZATIONS.map((spec) => (
-            <option key={spec} value={spec}>
-              {spec}
+          <option value="">All specializations</option>
+          {SPECIALIZATIONS.map((s) => (
+            <option key={s} value={s}>
+              {s}
             </option>
           ))}
         </select>
 
         <input
           type="date"
-          className="border p-2 rounded"
           value={filters.startDate}
           onChange={(e) =>
             setFilters({ ...filters, startDate: e.target.value })
           }
+          className="border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
 
         <input
           type="date"
-          className="border p-2 rounded"
           value={filters.endDate}
           onChange={(e) =>
             setFilters({ ...filters, endDate: e.target.value })
           }
+          className="border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
       </div>
 
-      {/* ✅ Table */}
-      <div className="bg-white shadow rounded overflow-x-auto">
-        <table className="min-w-full">
-          <thead className="bg-gray-100">
+      {/* 📊 Table */}
+      <div className="bg-white border rounded-2xl shadow-sm overflow-hidden mb-6">
+        <table className="w-full text-sm">
+          <thead className="bg-gray-100 text-gray-600">
             <tr>
-              <th className="p-3 text-left">Doctor</th>
-              <th className="p-3 text-left">Specialization</th>
-              <th className="p-3 text-left">Total</th>
-              <th className="p-3 text-left">Completed</th>
-              <th className="p-3 text-left">Pending</th>
+              {["Doctor", "Specialization", "Total", "Completed", "Pending"].map(
+                (h) => (
+                  <th key={h} className="text-left px-4 py-3 font-medium">
+                    {h}
+                  </th>
+                )
+              )}
             </tr>
           </thead>
 
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan="5" className="text-center p-4">
+                <td colSpan={5} className="text-center py-6 text-gray-500">
                   Loading...
                 </td>
               </tr>
             ) : stats.length > 0 ? (
               stats.map((doc) => (
-                <tr key={doc.id} className="border-t">
-                  <td className="p-3">{doc.name}</td>
-                  <td className="p-3">{doc.specialization}</td>
-                  <td className="p-3">{doc.totalAppointments}</td>
-                  <td className="p-3 text-green-600">
+                <tr
+                  key={doc.id}
+                  className="border-t hover:bg-gray-50 transition"
+                >
+                  <td className="px-4 py-3 font-medium text-gray-800">
+                    {doc.name}
+                  </td>
+                  <td className="px-4 py-3 text-gray-600">
+                    {doc.specialization}
+                  </td>
+                  <td className="px-4 py-3">
+                    {doc.totalAppointments}
+                  </td>
+                  <td className="px-4 py-3 text-green-600 font-medium">
                     {doc.completedAppointments}
                   </td>
-                  <td className="p-3 text-red-600">
+                  <td className="px-4 py-3 text-red-500 font-medium">
                     {doc.pendingAppointments}
                   </td>
                 </tr>
               ))
             ) : (
               <tr>
-                <td colSpan="5" className="text-center p-4 text-gray-500">
+                <td colSpan={5} className="text-center py-6 text-gray-500">
                   No data found
                 </td>
               </tr>
@@ -187,45 +207,28 @@ export const Dashboard = () => {
         </table>
       </div>
 
-      {/* ✅ Pagination */}
-      <div className="flex justify-between items-center">
+      {/* 🔄 Pagination */}
+      <div className="flex justify-between items-center text-sm text-gray-600">
         <button
           disabled={page === 0}
-          onClick={() => setPage((prev) => prev - 1)}
-          className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50"
+          onClick={() => setPage((p) => p - 1)}
+          className="px-4 py-2 border rounded-lg bg-white hover:bg-gray-100 disabled:opacity-40"
         >
-          Previous
+          ← Previous
         </button>
 
-        <span className="font-medium">
+        <span>
           Page {page + 1} of {totalPages}
         </span>
 
         <button
-          disabled={page + 1 === totalPages}
-          onClick={() => setPage((prev) => prev + 1)}
-          className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50"
+          disabled={page + 1 >= totalPages}
+          onClick={() => setPage((p) => p + 1)}
+          className="px-4 py-2 border rounded-lg bg-white hover:bg-gray-100 disabled:opacity-40"
         >
-          Next
+          Next →
         </button>
       </div>
-    </div>
-  );
-};
-
-// ✅ Reusable Card Component
-const Card = ({ title, value, color }) => {
-  const colors = {
-    blue: "bg-blue-500",
-    green: "bg-green-500",
-    red: "bg-red-500",
-    purple: "bg-purple-500",
-  };
-
-  return (
-    <div className={`${colors[color]} text-white p-4 rounded shadow`}>
-      <h2 className="text-sm">{title}</h2>
-      <p className="text-2xl font-bold">{value || 0}</p>
     </div>
   );
 };
