@@ -10,7 +10,7 @@ export default function SlotsPage() {
   const [loading, setLoading] = useState(false);
 
   // filters
-  const [startDate, setStartDate] = useState("");
+  const [startDate, setStartDate] = useState(new Date().toISOString().split("T")[0]);
   const [endDate, setEndDate] = useState("");
   const [slotStatus, setSlotStatus] = useState("");
   const [doctorName, setDoctorName] = useState("");

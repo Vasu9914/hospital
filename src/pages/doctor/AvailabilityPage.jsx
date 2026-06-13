@@ -1,11 +1,10 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { AvailabilityAPI } from "../../api/AvailabilityApi";
+import { toast } from "react-toastify";
 
 export default function AvailabilityPage() {
-  const navigate = useNavigate();
-
   const [data, setData] = useState([]);
+
   const [pageInfo, setPageInfo] = useState({
     page: 0,
     size: 5,
@@ -15,12 +14,15 @@ export default function AvailabilityPage() {
 
   const [filters, setFilters] = useState({
     doctorId: 3,
-    startDate: "",
+    startDate: new Date().toISOString().split("T")[0],
     endDate: "",
     availabilityStatus: "",
   });
 
   const [loading, setLoading] = useState(false);
+
+  // ✅ Modal state
+  const [showModal, setShowModal] = useState(false);
 
   // ================= FETCH =================
   const fetchAvailability = async (page = 0) => {
@@ -47,6 +49,7 @@ export default function AvailabilityPage() {
       });
     } catch (err) {
       console.error(err);
+      toast.error("Failed to fetch availability");
     } finally {
       setLoading(false);
     }
@@ -54,20 +57,19 @@ export default function AvailabilityPage() {
 
   // ================= DELETE =================
   const deleteAvailability = async (id) => {
-    const confirmDelete = window.confirm(
-      "Are you sure you want to delete this availability?"
-    );
-    if (!confirmDelete) return;
+    if (!window.confirm("Are you sure you want to delete?")) return;
 
     try {
       await AvailabilityAPI.delete(id);
+      toast.success("Deleted successfully");
       fetchAvailability(pageInfo.page);
     } catch (err) {
       console.error(err);
+      toast.error("Delete failed");
     }
   };
 
-  // ================= AUTO FILTER (DEBOUNCE) =================
+  // ================= AUTO FILTER =================
   useEffect(() => {
     const delay = setTimeout(() => {
       fetchAvailability(0);
@@ -87,7 +89,6 @@ export default function AvailabilityPage() {
     fetchAvailability(newPage);
   };
 
-  // ================= UI =================
   return (
     <div className="p-6 bg-gray-100 min-h-screen">
       <div className="max-w-6xl mx-auto bg-white shadow-md rounded-xl p-6">
@@ -99,15 +100,15 @@ export default function AvailabilityPage() {
           </h2>
 
           <button
-            onClick={() => navigate("/doctor/availability/create")}
+            onClick={() => setShowModal(true)}
             className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
           >
-            Add Availability
+            + Add Availability
           </button>
         </div>
 
-        {/* FILTERS (AUTO SEARCH) */}
-        <div className="flex flex-wrap gap-4 mb-6">
+        {/* FILTERS */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
           <input
             type="date"
             name="startDate"
@@ -168,7 +169,6 @@ export default function AvailabilityPage() {
                       <td className="p-3">{item.startTime}</td>
                       <td className="p-3">{item.endTime}</td>
 
-                      {/* STATUS */}
                       <td className="p-3">
                         <span
                           className={`px-2 py-1 rounded text-sm font-medium ${
@@ -181,7 +181,6 @@ export default function AvailabilityPage() {
                         </span>
                       </td>
 
-                      {/* ACTION */}
                       <td className="p-3">
                         {item.availabilityStatus === "ACTIVE" && (
                           <button
@@ -210,7 +209,7 @@ export default function AvailabilityPage() {
             Prev
           </button>
 
-          <span className="text-gray-700">
+          <span>
             Page {pageInfo.page + 1} of {pageInfo.totalPages}
           </span>
 
@@ -222,8 +221,135 @@ export default function AvailabilityPage() {
             Next
           </button>
         </div>
-
       </div>
+
+      {/* ================= MODAL ================= */}
+      {showModal && (
+<div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50">          <div className="bg-white rounded-xl shadow-lg w-full max-w-md p-6 relative">
+
+            {/* Close */}
+            <button
+              onClick={() => setShowModal(false)}
+              className="absolute top-3 right-3 text-gray-500 hover:text-black text-lg"
+            >
+              ✕
+            </button>
+
+            <AddAvailabilityForm
+              onClose={() => {
+                setShowModal(false);
+                fetchAvailability(pageInfo.page);
+              }}
+            />
+          </div>
+        </div>
+      )}
     </div>
+  );
+}
+
+
+
+
+
+
+// ================= FORM COMPONENT =================
+function AddAvailabilityForm({ onClose }) {
+  const [form, setForm] = useState({
+    date: "",
+    startTime: "",
+    endTime: "",
+  });
+
+  const doctorId = 3;
+
+  const handleChange = (e) => {
+    setForm({
+      ...form,
+      [e.target.name]: e.target.value,
+    });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    if (form.startTime >= form.endTime) {
+      toast.error("End time must be after start time");
+      return;
+    }
+
+    try {
+      await AvailabilityAPI.add({
+        doctorId,
+        ...form,
+      });
+
+      toast.success("Availability added successfully");
+
+      setForm({
+        date: "",
+        startTime: "",
+        endTime: "",
+      });
+
+      onClose(); // close modal + refresh
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to add availability");
+    }
+  };
+
+  return (
+    <>
+      <h2 className="text-xl font-semibold mb-4 text-center">
+        Add Availability
+      </h2>
+
+      <form onSubmit={handleSubmit} className="space-y-4">
+
+        <div>
+          <label className="text-sm font-medium">Date</label>
+          <input
+            type="date"
+            name="date"
+            value={form.date}
+            onChange={handleChange}
+            className="w-full border px-3 py-2 rounded-lg mt-1"
+            required
+          />
+        </div>
+
+        <div>
+          <label className="text-sm font-medium">Start Time</label>
+          <input
+            type="time"
+            name="startTime"
+            value={form.startTime}
+            onChange={handleChange}
+            className="w-full border px-3 py-2 rounded-lg mt-1"
+            required
+          />
+        </div>
+
+        <div>
+          <label className="text-sm font-medium">End Time</label>
+          <input
+            type="time"
+            name="endTime"
+            value={form.endTime}
+            onChange={handleChange}
+            className="w-full border px-3 py-2 rounded-lg mt-1"
+            required
+          />
+        </div>
+
+        <button
+          type="submit"
+          className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700"
+        >
+          Add Availability
+        </button>
+      </form>
+    </>
   );
 }

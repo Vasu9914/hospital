@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { DoctorAPI } from "../../api/DoctorApi.js";
+import {UserAPI} from "../../api/UserApi.js";
 import { toast } from "react-toastify";
 
 export const Profile = () => {
@@ -7,16 +8,19 @@ export const Profile = () => {
   const [formData, setFormData] = useState({});
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [photoFile, setPhotoFile] = useState(null);
+  const [photoPreview, setPhotoPreview] = useState("");
 
   const fetchProfile = async () => {
     try {
       const res = await DoctorAPI.getProfile();
 
-      // ⚠️ adjust based on your backend response
-      const data = res.data?.data || res.data;
-
+      const data =  res.data;
+      console.log("Fetched Profile:", data);
       setDoctor(data);
       setFormData(data);
+      setPhotoPreview(data.profilePictureUrl||"");
     } catch (error) {
       console.error("Error fetching profile", error);
       toast.error("Failed to load profile");
@@ -28,12 +32,8 @@ export const Profile = () => {
   const updateProfile = async () => {
     try {
       const res = await DoctorAPI.updateProfile(formData);
-
-      const data = res.data?.data || res.data;
-
-      setDoctor(data);
+      setDoctor(formData);
       setIsEditing(false);
-
       toast.success("Profile updated successfully!");
     } catch (error) {
       console.error("Error updating profile", error);
@@ -50,6 +50,37 @@ export const Profile = () => {
       ...formData,
       [e.target.name]: e.target.value,
     });
+  };
+
+  const handlePhotoChange = (e) => {
+    const file = e.target.files?.[0] || null;
+    setPhotoFile(file);
+
+    if (file) {
+      setPhotoPreview(URL.createObjectURL(file));
+    }
+  };
+
+  const uploadPhoto = async () => {
+    if (!photoFile) {
+      toast.error("Please choose a photo first");
+      return;
+    }
+
+    try {
+      setUploadingPhoto(true);
+      const res = await UserAPI.updatephoto(photoFile);
+      console.log(res);
+      toast.success("Profile photo uploaded successfully");
+      setPhotoPreview(res.data);
+      setPhotoFile(null);
+      
+    } catch (error) {
+      console.error("Error uploading photo", error);
+      toast.error("Photo upload failed");
+    }finally {
+      setUploadingPhoto(false);
+    }
   };
 
   if (loading) {
@@ -97,9 +128,27 @@ export const Profile = () => {
 
       {/* Profile Card */}
       <div className="bg-white shadow-md rounded-xl p-6 flex items-center gap-6">
-        
-        <div className="w-20 h-20 rounded-full bg-indigo-500 text-white flex items-center justify-center text-xl font-bold">
-          {doctor.name?.charAt(0)}
+
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-20 h-20 overflow-hidden rounded-full bg-indigo-500 text-white flex items-center justify-center text-xl font-bold">
+            {photoPreview ? (
+              <img src={photoPreview} alt="Doctor profile" className="h-full w-full object-cover" />
+            ) : (
+              doctor.name?.charAt(0)
+            )}
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <input type="file" accept="image/*" onChange={handlePhotoChange} className="text-sm" />
+            <button
+              type="button"
+              onClick={uploadPhoto}
+              className={`rounded-lg bg-indigo-600 px-3 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:bg-gray-400 ${uploadingPhoto ? "cursor-not-allowed" : ""}`}
+              disabled={uploadingPhoto}
+            >
+              {uploadingPhoto ? "Uploading..." : "Change Photo"}
+            </button>
+          </div>
         </div>
 
         <div>

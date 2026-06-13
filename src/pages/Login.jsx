@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState,useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { saveToken, getRole } from '../utils/auth';
 import { AuthAPI } from '../api/authApi';
@@ -28,6 +28,13 @@ export default function Login() {
       
     }
   }
+
+  useEffect(() => {
+    const role = getRole();
+    if (role === 'PATIENT') navigate('/patient/dashboard');
+    else if (role === 'DOCTOR') navigate('/doctor/dashboard');
+    else if (role === 'ADMIN') navigate('/admin/dashboard');
+  }, [navigate]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-blue-50">

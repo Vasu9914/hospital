@@ -21,7 +21,7 @@ const ForgetPassword = () => {
       toast.success("Reset link sent to your email!");
       setEmail("");
     } catch (error) {
-      toast.error(error?.response?.data?.message || "Something went wrong");
+      
     } finally {
       setLoading(false);
     }

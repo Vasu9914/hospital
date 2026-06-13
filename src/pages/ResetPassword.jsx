@@ -35,7 +35,7 @@ const ResetPassword = () => {
       navigate("/auth/login");
 
     } catch (error) {
-      toast.error(error?.response?.data?.message || "Reset failed");
+      
     } finally {
       setLoading(false);
     }

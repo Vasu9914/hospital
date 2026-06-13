@@ -7,9 +7,11 @@ export default function DoctorSlots() {
   const [loading, setLoading] = useState(false);
 
   // filters
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
-  const [slotStatus, setSlotStatus] = useState("");
+  const [filters, setFilters] = useState({
+    startDate: new Date().toISOString().split("T")[0],
+    endDate: "",
+    slotStatus: "",
+  });
 
   // pagination
   const [page, setPage] = useState(0);
@@ -19,23 +21,24 @@ export default function DoctorSlots() {
   // ---------------------------
   // Fetch slots
   // ---------------------------
-  const fetchSlots = async () => {
+  const fetchSlots = async (pageNo = page) => {
     try {
       setLoading(true);
 
       const res = await SlotAPI.getAll(
         null,
-        startDate,
-        endDate,
-        slotStatus,
-        page,
+        filters.startDate,
+        filters.endDate,
+        filters.slotStatus,
+        pageNo,
         size
       );
-
+      console.log("Fetched Slots:", res.data);
       const data = res.data;
-      console.log(data);
+
       setSlots(data.content);
       setTotalPages(data.totalPages);
+      setPage(data.page);
     } catch (err) {
       console.error(err);
       toast.error("Failed to fetch slots");
@@ -45,17 +48,29 @@ export default function DoctorSlots() {
   };
 
   useEffect(() => {
-    fetchSlots();
-  }, [page, startDate, endDate, slotStatus]);
+    fetchSlots(0);
+  }, [filters]);
+
+  // ---------------------------
+  // Handle filter change
+  // ---------------------------
+  const handleChange = (e) => {
+    setFilters({
+      ...filters,
+      [e.target.name]: e.target.value,
+    });
+  };
 
   // ---------------------------
   // Delete slot
   // ---------------------------
   const handleDelete = async (id) => {
+    if (!window.confirm("Delete this slot?")) return;
+
     try {
       await SlotAPI.delete(id);
       toast.success("Slot deleted");
-      fetchSlots();
+      fetchSlots(page);
     } catch (err) {
       console.error(err);
       toast.error("Delete failed");
@@ -71,62 +86,93 @@ export default function DoctorSlots() {
         return "bg-green-100 text-green-700";
       case "BOOKED":
         return "bg-red-100 text-red-700";
+      case "CANCELLED":
+        return "bg-gray-200 text-gray-700";
       default:
         return "bg-gray-100 text-gray-700";
     }
   };
 
-  // ---------------------------
-  // UI
-  // ---------------------------
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
-      <h2 className="text-2xl font-semibold mb-6">Slots</h2>
 
-      {/* Filters */}
-      <div className="flex flex-wrap gap-3 mb-6">
-        <input
-          type="date"
-          value={startDate}
-          onChange={(e) => {
-            setStartDate(e.target.value);
-            setPage(0);
-          }}
-          className="border px-3 py-2 rounded-lg"
-        />
+      {/* TITLE */}
+      <h2 className="text-2xl font-semibold mb-6">Doctor Slots</h2>
 
-        <input
-          type="date"
-          value={endDate}
-          onChange={(e) => {
-            setEndDate(e.target.value);
-            setPage(0);
-          }}
-          className="border px-3 py-2 rounded-lg"
-        />
+      {/* ================= FILTER CARD ================= */}
+      <div className="bg-white p-5 rounded-xl shadow mb-6">
+        <h3 className="text-lg font-semibold mb-4 text-gray-700">
+          Filter Slots
+        </h3>
 
-        <select
-          value={slotStatus}
-          onChange={(e) => {
-            setSlotStatus(e.target.value);
-            setPage(0);
-          }}
-          className="border px-3 py-2 rounded-lg"
-        >
-          <option value="">All Status</option>
-          <option value="AVAILABLE">AVAILABLE</option>
-          <option value="BOOKED">BOOKED</option>
-          <option value="CANCELLED">CANCELLED</option>
-        </select>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+
+          {/* Start Date */}
+          <div>
+            <label className="text-xs text-gray-500">Start Date</label>
+            <input
+              type="date"
+              name="startDate"
+              value={filters.startDate}
+              onChange={handleChange}
+              className="w-full border px-3 py-2 rounded-lg mt-1"
+            />
+          </div>
+
+          {/* End Date */}
+          <div>
+            <label className="text-xs text-gray-500">End Date</label>
+            <input
+              type="date"
+              name="endDate"
+              value={filters.endDate}
+              onChange={handleChange}
+              className="w-full border px-3 py-2 rounded-lg mt-1"
+            />
+          </div>
+
+          {/* Status */}
+          <div>
+            <label className="text-xs text-gray-500">Status</label>
+            <select
+              name="slotStatus"
+              value={filters.slotStatus}
+              onChange={handleChange}
+              className="w-full border px-3 py-2 rounded-lg mt-1"
+            >
+              <option value="">All</option>
+              <option value="AVAILABLE">AVAILABLE</option>
+              <option value="BOOKED">BOOKED</option>
+              <option value="CANCELLED">CANCELLED</option>
+            </select>
+          </div>
+
+          {/* Buttons */}
+          <div className="flex items-end gap-2">        
+            <button
+              onClick={() => {
+                setFilters({
+                  startDate: "",
+                  endDate: "",
+                  slotStatus: "",
+                });
+                fetchSlots(0);
+              }}
+              className="w-full bg-gray-200 py-2 rounded-lg hover:bg-gray-300"
+            >
+              Reset
+            </button>
+          </div>
+        </div>
       </div>
 
-      {/* Table */}
+      {/* ================= TABLE ================= */}
       <div className="bg-white rounded-xl shadow overflow-hidden">
         {loading ? (
           <p className="text-center py-10">Loading...</p>
         ) : (
           <table className="w-full text-sm">
-            <thead className="bg-gray-100 text-xs uppercase">
+            <thead className="bg-gray-100 text-xs uppercase text-gray-600">
               <tr>
                 <th className="px-3 py-2">ID</th>
                 <th className="px-3 py-2">Date</th>
@@ -141,23 +187,22 @@ export default function DoctorSlots() {
             <tbody>
               {slots.length === 0 ? (
                 <tr>
-                  <td colSpan="8" className="text-center py-6">
+                  <td colSpan="7" className="text-center py-6">
                     No slots found
                   </td>
                 </tr>
               ) : (
                 slots.map((slot) => (
-                  <tr key={slot.slotId} className="border-t">
+                  <tr key={slot.slotId} className="border-t hover:bg-gray-50">
                     <td className="px-3 py-2">{slot.slotId}</td>
                     <td className="px-3 py-2">{slot.date}</td>
                     <td className="px-3 py-2">{slot.startTime}</td>
-                    <td className="px-3 py-2">{slot.endTime}</td>        
+                    <td className="px-3 py-2">{slot.endTime}</td>
                     <td className="px-3 py-2">₹{slot.fee}</td>
 
-                    {/* STATUS */}
                     <td className="px-3 py-2">
                       <span
-                        className={`px-2 py-1 rounded text-xs font-medium ${getStatusStyle(
+                        className={`px-2 py-1 rounded text-xs ${getStatusStyle(
                           slot.slotStatus
                         )}`}
                       >
@@ -165,7 +210,6 @@ export default function DoctorSlots() {
                       </span>
                     </td>
 
-                    {/* ACTION */}
                     <td className="px-3 py-2">
                       <button
                         disabled={slot.slotStatus !== "AVAILABLE"}
@@ -187,11 +231,11 @@ export default function DoctorSlots() {
         )}
       </div>
 
-      {/* Pagination */}
+      {/* ================= PAGINATION ================= */}
       <div className="flex justify-center items-center gap-4 mt-6">
         <button
           disabled={page === 0}
-          onClick={() => setPage(page - 1)}
+          onClick={() => fetchSlots(page - 1)}
           className="px-4 py-2 bg-gray-200 rounded disabled:opacity-50"
         >
           Prev
@@ -203,7 +247,7 @@ export default function DoctorSlots() {
 
         <button
           disabled={page + 1 >= totalPages}
-          onClick={() => setPage(page + 1)}
+          onClick={() => fetchSlots(page + 1)}
           className="px-4 py-2 bg-gray-200 rounded disabled:opacity-50"
         >
           Next
@@ -211,4 +255,4 @@ export default function DoctorSlots() {
       </div>
     </div>
   );
-}
+} 

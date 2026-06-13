@@ -1,30 +1,37 @@
-import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { DoctorAPI } from '../../api/DoctorApi';
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { DoctorAPI } from "../../api/DoctorApi";
+import DashboardNavbar from "../../components/DashboardNavbar";
 
 export const Dashboard = () => {
   const [doctors, setDoctors] = useState([]);
-  const [name, setName] = useState('');
-  const [specialization, setSpecialization] = useState('');
+
+  // filters
+  const [filters, setFilters] = useState({
+    name: "",
+    specialization: "",
+  });
+
   const [page, setPage] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(false);
 
   const navigate = useNavigate();
 
-  const getDoctors = async (searchName, searchSpec, pageNo) => {
+  // ================= FETCH =================
+  const getDoctors = async (pageNo = 0) => {
     try {
       setLoading(true);
 
       const res = await DoctorAPI.getDoctors(
-        searchName,
-        searchSpec,
+        filters.name,
+        filters.specialization,
         pageNo
       );
 
       setDoctors(res.data?.content || []);
       setTotalPages(res.data?.totalPages || 1);
-
+      setPage(pageNo);
     } catch (error) {
       console.log(error);
     } finally {
@@ -33,75 +40,120 @@ export const Dashboard = () => {
   };
 
   useEffect(() => {
-    const delay = setTimeout(() => {
-      getDoctors(name, specialization, page);
-    }, 500);
+    getDoctors(0);
+  }, [filters]);
 
-    return () => clearTimeout(delay);
-  }, [name, specialization, page]);
+  // ================= FILTER CHANGE =================
+  const handleChange = (e) => {
+    setFilters({
+      ...filters,
+      [e.target.name]: e.target.value,
+    });
+  };
 
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold mb-4">Patient Dashboard</h1>
+    <div className="p-6 bg-gray-50 min-h-screen">
+      <DashboardNavbar
+        title="Patient Dashboard"
+        subtitle="Find doctors and book an appointment from one place."
+      />
 
-      {/* 🔍 Search */}
-      <div className="flex gap-4 mb-6">
-        <input
-          type="text"
-          placeholder="Search name..."
-          value={name}
-          onChange={(e) => {
-            setName(e.target.value);
-            setPage(0); // ✅ reset page
-          }}
-          className="border p-2 rounded w-48 focus:outline-none focus:ring-2 focus:ring-blue-400"
-        />
+      {/* ================= FILTER CARD ================= */}
+      <div className="bg-white p-5 rounded-xl shadow mb-6">
+        <h3 className="text-lg font-semibold text-gray-700 mb-4">
+          Find Doctors
+        </h3>
 
-        <input
-          type="text"
-          placeholder="Specialization..."
-          value={specialization}
-          onChange={(e) => {
-            setSpecialization(e.target.value);
-            setPage(0); // ✅ reset page
-          }}
-          className="border p-2 rounded w-48 focus:outline-none focus:ring-2 focus:ring-blue-400"
-        />
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+
+          {/* Name */}
+          <div>
+            <label className="text-xs text-gray-500">Doctor Name</label>
+            <input
+              type="text"
+              name="name"
+              value={filters.name}
+              onChange={handleChange}
+              placeholder="Search name..."
+              className="w-full border px-3 py-2 rounded-lg mt-1"
+            />
+          </div>
+
+          {/* Specialization */}
+          <div>
+            <label className="text-xs text-gray-500">Specialization</label>
+            <input
+              type="text"
+              name="specialization"
+              value={filters.specialization}
+              onChange={handleChange}
+              placeholder="e.g. Cardiologist"
+              className="w-full border px-3 py-2 rounded-lg mt-1"
+            />
+          </div>
+
+          {/* Buttons */}
+          <div className="flex items-end gap-2 col-span-2">
+            <button
+              onClick={() => getDoctors(0)}
+              className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700"
+            >
+              Search
+            </button>
+
+            <button
+              onClick={() => {
+                setFilters({ name: "", specialization: "" });
+                getDoctors(0);
+              }}
+              className="w-full bg-gray-200 py-2 rounded-lg hover:bg-gray-300"
+            >
+              Reset
+            </button>
+          </div>
+        </div>
       </div>
 
-      {/* 🔄 Loading */}
+      {/* ================= LOADING ================= */}
       {loading && (
         <p className="text-center text-gray-500">Loading...</p>
       )}
 
-      {/* ❌ Empty */}
+      {/* ================= EMPTY ================= */}
       {!loading && doctors.length === 0 && (
         <p className="text-center text-gray-500">
           No doctors found
         </p>
       )}
 
-      {/* 👨‍⚕️ Doctors Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
+      {/* ================= DOCTOR GRID ================= */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
         {doctors.map((doc) => (
           <div
             key={doc.doctorId}
-            className="bg-white p-4 rounded-xl shadow hover:shadow-lg transition"
+            className="bg-white p-5 rounded-xl shadow hover:shadow-lg transition"
           >
-            <h3 className="text-lg font-semibold">{doc.doctorName}</h3>
-            <p className="text-gray-600">{doc.specialization}</p>
-            <p className="text-sm text-gray-500">
-              {doc.experience} yrs experience
+            <h3 className="text-lg font-semibold text-gray-800">
+              {doc.doctorName}
+            </h3>
+
+            <p className="text-blue-600 text-sm font-medium">
+              {doc.specialization}
             </p>
-            <p className="font-medium mt-1">
+
+            <p className="text-sm text-gray-500 mt-1">
+              {doc.experience} years experience
+            </p>
+
+            <p className="font-semibold mt-2 text-gray-800">
               ₹{doc.consultationFee}
             </p>
 
             <button
-              className="mt-3 w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600"
-              onClick={() => {
-                navigate(`/patient/slots/${doc.doctorId}`);
-              }}
+              onClick={() =>
+                navigate(`/patient/slots/${doc.doctorId}`)
+              }
+              className="mt-4 w-full bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600"
             >
               Book Appointment
             </button>
@@ -109,42 +161,25 @@ export const Dashboard = () => {
         ))}
       </div>
 
-      {/* 📄 Pagination */}
-      <div className="flex justify-center items-center gap-4 mt-6">
+      {/* ================= PAGINATION ================= */}
+      <div className="flex justify-center items-center gap-4 mt-8">
 
-        {/* Prev */}
         <button
-          onClick={() =>
-            setPage((prev) => Math.max(prev - 1, 0))
-          }
+          onClick={() => getDoctors(page - 1)}
           disabled={page === 0}
-          className={`px-4 py-2 rounded ${
-            page === 0
-              ? 'bg-gray-300 cursor-not-allowed'
-              : 'bg-blue-500 text-white hover:bg-blue-600'
-          }`}
+          className="px-4 py-2 rounded bg-gray-200 disabled:opacity-50"
         >
           Prev
         </button>
 
-        {/* Page Info */}
         <span className="font-medium">
           Page {page + 1} of {totalPages}
         </span>
 
-        {/* Next */}
         <button
-          onClick={() =>
-            setPage((prev) =>
-              Math.min(prev + 1, totalPages - 1)
-            )
-          }
+          onClick={() => getDoctors(page + 1)}
           disabled={page >= totalPages - 1}
-          className={`px-4 py-2 rounded ${
-            page >= totalPages - 1
-              ? 'bg-gray-300 cursor-not-allowed'
-              : 'bg-blue-500 text-white hover:bg-blue-600'
-          }`}
+          className="px-4 py-2 rounded bg-gray-200 disabled:opacity-50"
         >
           Next
         </button>

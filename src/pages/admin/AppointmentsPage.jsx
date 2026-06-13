@@ -19,7 +19,7 @@ export default function AppointmentsPage() {
   const [patientId, setPatientId] = useState(null);
   const [doctorName, setDoctorName] = useState("");
   const [patientName, setPatientName] = useState("");
-  const [startDate, setStartDate] = useState("");
+  const [startDate, setStartDate] = useState(new Date().toISOString().split("T")[0]);
   const [endDate, setEndDate] = useState("");
   const [status, setStatus] = useState("");
 

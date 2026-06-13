@@ -1,222 +1,243 @@
-import React, { useEffect, useState } from 'react';
-import { AppointmentAPI } from '../../api/AppointmentApi';
-import { PrescriptionAPI } from '../../api/PrescriptionApi';
+import React, { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
+import { AppointmentAPI } from "../../api/AppointmentApi";
+import { PrescriptionAPI } from "../../api/PrescriptionApi";
 
 export default function Appointment() {
+  const { doctorId } = useParams();
 
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  // filters
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
-  const [appointmentStatus, setAppointmentStatus] = useState('');
+  const [filters, setFilters] = useState({
+    startDate: new Date().toISOString().split("T")[0],
+    endDate: "",
+    status: "",
+  });
+
   const [page, setPage] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
 
-  // modal state
   const [selectedPrescription, setSelectedPrescription] = useState(null);
   const [showModal, setShowModal] = useState(false);
 
-  // static (your case)
-  const doctorId = 3;
   const patientId = 2;
   const allStatuses = ["CONFIRMED", "COMPLETED", "CANCELLED"];
 
-  const getAppointments = async () => {
+  // ================= FETCH =================
+  const getAppointments = async (pageNo = page) => {
     try {
       setLoading(true);
 
       const res = await AppointmentAPI.getAll(
         doctorId,
         patientId,
-        startDate,
-        endDate,
-        appointmentStatus,
-        page,
+        filters.startDate,
+        filters.endDate,
+        filters.status,
+        pageNo,
         3
       );
 
-      console.log("Fetched Appointments:", res.data);
-
       setAppointments(res.data?.content || []);
       setTotalPages(res.data?.totalPages || 1);
-
-    } catch (error) {
-      console.log(error);
+      setPage(pageNo);
+    } catch (err) {
+      console.log(err);
     } finally {
       setLoading(false);
     }
   };
 
+  useEffect(() => {
+    if (doctorId) getAppointments(0);
+  }, [doctorId]);
+
+  // ================= PRESCRIPTION =================
   const fetchPrescriptions = async (appointmentId) => {
     try {
-      const res = await PrescriptionAPI.getappointmentprescription(appointmentId);
+      const res =
+        await PrescriptionAPI.getappointmentprescription(appointmentId);
 
-      console.log("Prescription:", res.data);
-
-      // adjust based on your ApiResponse
       setSelectedPrescription(res.data.data || res.data);
       setShowModal(true);
-
-    } catch (error) {
-      console.log(error);
+    } catch (err) {
+      console.log(err);
     }
   };
 
-  useEffect(() => {
-    getAppointments();
-  }, [startDate, endDate, appointmentStatus, page]);
-
   return (
-    <div className="min-h-screen bg-gray-100 p-6">
+    <div className="min-h-screen bg-gray-50 p-6">
+      <div className="max-w-5xl mx-auto">
 
-      <div className="max-w-4xl mx-auto bg-white p-6 rounded-xl shadow">
-
-        <h1 className="text-2xl font-bold mb-6 text-center">
-          Appointments
+        {/* TITLE */}
+        <h1 className="text-2xl font-bold mb-6 text-gray-800">
+          My Appointments
         </h1>
 
-        {/* FILTER */}
-        <div className="flex flex-col md:flex-row gap-3 mb-6">
+        {/* ================= FILTER CARD ================= */}
+        <div className="bg-white p-5 rounded-xl shadow mb-6">
+          <div className="grid md:grid-cols-4 gap-3">
 
-          <input
-            type="date"
-            value={startDate}
-            onChange={(e) => setStartDate(e.target.value)}
-            className="border p-2 rounded w-full"
-          />
+            <input
+              type="date"
+              value={filters.startDate}
+              onChange={(e) =>
+                setFilters({ ...filters, startDate: e.target.value })
+              }
+              className="border p-2 rounded-lg"
+            />
 
-          <input
-            type="date"
-            value={endDate}
-            onChange={(e) => setEndDate(e.target.value)}
-            className="border p-2 rounded w-full"
-          />
+            <input
+              type="date"
+              value={filters.endDate}
+              onChange={(e) =>
+                setFilters({ ...filters, endDate: e.target.value })
+              }
+              className="border p-2 rounded-lg"
+            />
 
-          <select
-            value={appointmentStatus}
-            onChange={(e) => setAppointmentStatus(e.target.value)}
-            className="border p-2 rounded w-full"
-          >
-            <option value="">All</option>
-            {allStatuses.map((status) => (
-              <option key={status} value={status}>
-                {status}
-              </option>
-            ))}
-          </select>
+            <select
+              value={filters.status}
+              onChange={(e) =>
+                setFilters({ ...filters, status: e.target.value })
+              }
+              className="border p-2 rounded-lg"
+            >
+              <option value="">All</option>
+              {allStatuses.map((s) => (
+                <option key={s}>{s}</option>
+              ))}
+            </select>
 
-          <button
-            onClick={() => {
-              setStartDate('');
-              setEndDate('');
-              setAppointmentStatus('');
-            }}
-            className="bg-gray-500 text-white px-4 py-2 rounded"
-          >
-            Reset
-          </button>
+            <button
+              onClick={() => {
+                setFilters({ startDate: "", endDate: "", status: "" });
+                getAppointments(0);
+              }}
+              className="bg-gray-200 rounded-lg hover:bg-gray-300"
+            >
+              Reset
+            </button>
+          </div>
         </div>
 
-        {/* Loading */}
+        {/* LOADING */}
         {loading && <p className="text-center">Loading...</p>}
 
-        {/* Empty */}
+        {/* EMPTY */}
         {!loading && appointments.length === 0 && (
-          <p className="text-center">No appointments found</p>
+          <p className="text-center text-gray-500">
+            No appointments found
+          </p>
         )}
 
-        {/* Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-
+        {/* ================= CARDS ================= */}
+        <div className="grid md:grid-cols-2 gap-5">
           {appointments.map((a) => (
-            <div key={a.id} className="border rounded-xl p-4 shadow bg-white">
-
+            <div
+              key={a.id}
+              className="bg-white p-5 rounded-xl shadow hover:shadow-lg transition"
+            >
               <div className="flex justify-between items-center mb-2">
-                <h2 className="font-semibold">{a.date}</h2>
 
-                <span className="text-xs px-2 py-1 rounded bg-gray-200">
+                <h2 className="font-semibold text-gray-800">
+                  {a.date}
+                </h2>
+
+                <span
+                  className={`text-xs px-2 py-1 rounded ${a.status === "CONFIRMED"
+                      ? "bg-green-100 text-green-700"
+                      : a.status === "COMPLETED"
+                        ? "bg-blue-100 text-blue-700"
+                        : "bg-red-100 text-red-700"
+                    }`}
+                >
                   {a.status}
                 </span>
               </div>
 
-              <p>{a.startTime} - {a.endTime}</p>
+              <p className="text-sm text-gray-600">
+                {a.startTime} - {a.endTime}
+              </p>
 
-              <p><b>Doctor:</b> {a.doctorName}</p>
+              <p className="mt-2">
+                <b>Doctor:</b> {a.doctorName}
+              </p>
 
-              <p><b>Reason:</b> {a.reason}</p>
+              <p>
+                <b>Reason:</b> {a.reason}
+              </p>
 
               {a.notes && (
-                <p><b>Notes:</b> {a.notes}</p>
+                <p>
+                  <b>Notes:</b> {a.notes}
+                </p>
               )}
 
-              
               {a.status === "COMPLETED" && (
-              <button
-                onClick={() => fetchPrescriptions(a.id)}
-                className="mt-3 bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded"
-              >
-                View Prescription
-              </button>
+                <button
+                  onClick={() => fetchPrescriptions(a.id)}
+                  className="mt-4 w-full bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600"
+                >
+                  View Prescription
+                </button>
               )}
-          
             </div>
           ))}
-
         </div>
 
+        {/* PAGINATION */}
+        <div className="flex justify-center gap-4 mt-6">
+          <button
+            onClick={() => getAppointments(page - 1)}
+            disabled={page === 0}
+            className="px-4 py-2 bg-gray-200 rounded disabled:opacity-50"
+          >
+            Prev
+          </button>
+
+          <span>
+            Page {page + 1} / {totalPages}
+          </span>
+
+          <button
+            onClick={() => getAppointments(page + 1)}
+            disabled={page >= totalPages - 1}
+            className="px-4 py-2 bg-gray-200 rounded disabled:opacity-50"
+          >
+            Next
+          </button>
+        </div>
       </div>
 
-      {/* Pagination */}
-      <div className="flex justify-center items-center gap-4 mt-6">
-
-        <button
-          onClick={() => setPage((prev) => prev - 1)}
-          disabled={page === 0}
-          className="px-4 py-2 bg-gray-300 rounded"
-        >
-          Prev
-        </button>
-
-        <span>
-          Page {page + 1} of {totalPages}
-        </span>
-
-        <button
-          onClick={() => setPage((prev) => prev + 1)}
-          disabled={page >= totalPages - 1}
-          className="px-4 py-2 bg-blue-500 text-white rounded"
-        >
-          Next
-        </button>
-
-      </div>
-
-      {/* ✅ MODAL */}
+      {/* ================= MODAL ================= */}
       {showModal && selectedPrescription && (
-        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center">
-
-          <div className="bg-white p-6 rounded-lg w-full max-w-lg relative">
-
-            <button
-              onClick={() => setShowModal(false)}
-              className="absolute top-2 right-3"
-            >
-              ✕
-            </button>
-
-            <h2 className="text-xl font-bold mb-4">Prescription</h2>
+        <div
+          onClick={() => setShowModal(false)} // ✅ click outside closes
+          className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()} // ❗ prevent inside click close
+            className="bg-white p-6 rounded-xl w-full max-w-lg shadow-lg"
+          >
+            <h2 className="text-xl font-bold mb-4">
+              Prescription
+            </h2>
 
             <p><b>Doctor:</b> {selectedPrescription.doctorName}</p>
             <p><b>Patient:</b> {selectedPrescription.patientName}</p>
-            <p><b>Date:</b> {selectedPrescription.date}</p>
+            <p>
+              <b>Date:</b>{" "}
+              {new Date(selectedPrescription.createdAt).toLocaleString()}
+            </p>
 
             <h3 className="mt-4 font-semibold">Medicines</h3>
+
             <ul className="list-disc ml-5">
               {selectedPrescription.medicines?.map((m, i) => (
                 <li key={i}>
-                  {m.medicineName} - {m.dosage} - {m.days}
+                  {m.medicineName} - {m.dosage} ({m.days} days)
                 </li>
               ))}
             </ul>
@@ -224,11 +245,9 @@ export default function Appointment() {
             <p className="mt-4">
               <b>Notes:</b> {selectedPrescription.notes}
             </p>
-
           </div>
         </div>
       )}
-
     </div>
   );
 }

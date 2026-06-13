@@ -41,7 +41,7 @@ export function AvailabilityPage() {
   });
 
   const [filters, setFilters] = useState({
-    startDate: "",
+    startDate: new Date().toISOString().split("T")[0],
     endDate: "",
     availabilityStatus: "",
   });

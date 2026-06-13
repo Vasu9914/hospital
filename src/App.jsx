@@ -9,30 +9,28 @@ import { Dashboard as AdminDashboard } from './pages/admin/Dashboard';
 import Appointment from './pages/patient/Appointment';
 import SlotsSearch from './pages/patient/SlotsSearch';
 import Profile from './pages/patient/Profile';
-import PrescriptionView from './pages/patient/PrescriptionView';
 import { Profile as DoctorProfile } from './pages/doctor/Profile';
 import DoctorAppointment from './pages/doctor/DoctorAppointment';
 import CreatePrescription from './pages/doctor/CreatePrescription';
 import EditPrescription from './pages/doctor/EditPrescription';
 import DoctorSlots from './pages/doctor/DoctorSlots';
-import AddAvailability from './pages/doctor/AddAvailability';
 import AvailabilityPage from './pages/doctor/AvailabilityPage';
 import AppointmentsPage from './pages/admin/AppointmentsPage';
 import AddDoctorPage from './pages/admin/AddDoctorPage';
 import DoctorsPage from './pages/admin/DoctorsPage';
 import SlotsPage from './pages/admin/SlotsPage';
-import CreateAvailabilityPage from './pages/admin/CreateAvailabilityPage';
-import {AvailabilityPage as AdminAvailabilityPage} from './pages/admin/AvailabilityPage';
 import ForgetPassword from './pages/ForgetPassword';
 import ResetPassword from './pages/ResetPassword';
 import EmailVerify from './pages/EmailVerify';
 import VerifyTokenPage from './pages/VerifyTokenPage';
-
+import { AvailabilityPage as AdminAvailabilityPage} from './pages/admin/AvailabilityPage';
+import NotFound from './pages/NotFound';
+import Unauthorized from './pages/Unauthorized';
 export default function App() {
   return (
     <BrowserRouter>
 
-      <Routes>
+      <Routes>  
         {/* Public */}
         <Route path="/login" element={<Login />} />
 
@@ -57,11 +55,7 @@ export default function App() {
             <Profile />
           </ProtectedRoute>
         } />
-        <Route path="/patient/prescription" element={
-          <ProtectedRoute allowedRoles={['PATIENT']}>
-            <PrescriptionView />
-          </ProtectedRoute>
-        } />
+      
 
         {/* DOCTOR only */}
         <Route path="/doctor/dashboard" element={
@@ -104,11 +98,7 @@ export default function App() {
             <DoctorSlots />
           </ProtectedRoute>
         } />
-        <Route path="/doctor/availability" element={
-          <ProtectedRoute allowedRoles={['DOCTOR']}>
-            <AddAvailability />
-          </ProtectedRoute>
-        } />
+        
         {/* ADMIN only */}
         <Route path="/admin/dashboard" element={
           <ProtectedRoute allowedRoles={['ADMIN']}>
@@ -130,11 +120,7 @@ export default function App() {
             <SlotsPage />
           </ProtectedRoute>
         } />
-        <Route path="/admin/availability/create" element={
-          <ProtectedRoute allowedRoles={['ADMIN']}>
-            <CreateAvailabilityPage />
-          </ProtectedRoute>
-        } />
+        
         <Route path="/admin/doctors/:doctorId/availability" element={
           <ProtectedRoute allowedRoles={['ADMIN']}>
             <AdminAvailabilityPage />
@@ -151,8 +137,9 @@ export default function App() {
         <Route path="/auth/verify-email" element={<EmailVerify />} />
         <Route path="/auth/verification" element={<VerifyTokenPage />} />
 
+        <Route path="/unauthorized" element={<Unauthorized />} />
         {/* Catch-all */}
-        <Route path="*" element={<Navigate to="/login" replace />} />
+        <Route path="*" element={<NotFound />} />
       </Routes>
 
       {/* ✅ THIS WAS MISSING */}

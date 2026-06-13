@@ -29,7 +29,7 @@ const VerifyTokenPage = () => {
         }, 1500);
 
       } catch (error) {
-        toast.error(error?.response?.data?.message || "Verification failed");
+        
       } finally {
         setLoading(false);
       }

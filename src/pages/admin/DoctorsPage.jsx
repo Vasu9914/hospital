@@ -64,7 +64,7 @@ const DoctorsPage = () => {
       const newStatus =
         doctor.status === "ACTIVE" ? "INACTIVE" : "ACTIVE";
 
-      await AdminAPI.updateDoctor(doctor.doctorId, {
+      await AdminAPI.updateStatus(doctor.doctorId, {
         status: newStatus,
       });
 

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { PatientAPI } from '../../api/PatientApi';
+import { UserAPI } from '../../api/UserApi';
 import { toast } from 'react-toastify';
 
 const Profile = () => {
@@ -15,6 +16,8 @@ const Profile = () => {
   });
 
   const [loading, setLoading] = useState(false);
+  const [photoFile, setPhotoFile] = useState(null);
+  const [photoPreview, setPhotoPreview] = useState("");
 
   const getProfile = async () => {
     try {
@@ -26,6 +29,8 @@ const Profile = () => {
         ...prev,
         ...res.data
       }));
+
+      setPhotoPreview(res.data?.photoUrl || res.data?.profilePhoto || res.data?.imageUrl || "");
 
     } catch (error) {
       console.log(error);
@@ -55,7 +60,7 @@ const Profile = () => {
       toast.success("Profile updated ✅");
 
     } catch (error) {
-      console.log("ERROR:", error.response?.data);
+      
 
       // rollback
       setProfile(previousProfile);
@@ -66,18 +71,71 @@ const Profile = () => {
     }
   };
 
+  const handlePhotoChange = (e) => {
+    const file = e.target.files?.[0] || null;
+    setPhotoFile(file);
+
+    if (file) {
+      setPhotoPreview(URL.createObjectURL(file));
+    }
+  };
+
+  const uploadPhoto = async () => {
+    if (!photoFile) {
+      toast.error("Please choose a photo first");
+      return;
+    }
+
+    try {
+      await UserAPI.updatephoto(photoFile);
+      toast.success("Profile photo uploaded ✅");
+      setPhotoFile(null);
+      getProfile();
+    } catch (error) {
+      console.log(error);
+      toast.error("Photo upload failed ❌");
+    }
+  };
+
   useEffect(() => {
     getProfile();
   }, []);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-gray-100 flex justify-center items-center p-6">
+    <div className="min-h-screen bg-linear-to-br from-blue-50 to-gray-100 flex justify-center items-center p-6">
 
       <div className="bg-white w-full max-w-lg p-8 rounded-2xl shadow-xl">
 
         <h1 className="text-2xl font-bold text-center mb-6 text-gray-800">
           My Profile
         </h1>
+
+        <div className="mb-6 flex flex-col items-center gap-3">
+          <div className="h-24 w-24 overflow-hidden rounded-full bg-blue-500 text-white flex items-center justify-center text-2xl font-bold">
+            {photoPreview ? (
+              <img src={photoPreview} alt="Profile" className="h-full w-full object-cover" />
+            ) : (
+              profile.name?.charAt(0)?.toUpperCase() || "P"
+            )}
+          </div>
+
+          <div className="w-full">
+            <label className="text-sm text-gray-600">Profile photo</label>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handlePhotoChange}
+              className="w-full border rounded-lg p-2 mt-1 bg-white"
+            />
+            <button
+              type="button"
+              onClick={uploadPhoto}
+              className="w-full mt-2 rounded-lg bg-slate-900 py-2 text-white hover:bg-slate-700"
+            >
+              Upload Photo
+            </button>
+          </div>
+        </div>
 
         <div className="space-y-4">
 

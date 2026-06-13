@@ -2,12 +2,13 @@ import React, { useEffect, useState } from "react";
 import { AppointmentAPI } from "../../api/AppointmentApi";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
+import { formatDate, formatTime } from "../../utils/helper";
 
 export default function DoctorAppointment() {
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  const [startDate, setStartDate] = useState("");
+  const [startDate, setStartDate] = useState(new Date().toISOString().split("T")[0]);
   const [endDate, setEndDate] = useState("");
   const [appointmentStatus, setAppointmentStatus] = useState("");
 
@@ -34,7 +35,7 @@ export default function DoctorAppointment() {
         page,
         size
       );
-
+      console.log("Fetched Appointments:", res.data);
       const data = res.data;
 
       setAppointments(data.content);
@@ -49,20 +50,26 @@ export default function DoctorAppointment() {
 
   useEffect(() => {
     fetchAppointments();
-  }, [page, startDate, endDate, appointmentStatus,patientId]);
+  }, [page, startDate, endDate, appointmentStatus, patientId]);
 
   // ---------------------------
   // Navigation Handlers
   // ---------------------------
-    const handleAddPrescription = (appt) => {
-      navigate("/doctor/prescription/create", {
-        state: {
-          appointmentId: appt.id,
-          patientId: appt.patientId,
-          doctorId: appt.doctorId,
-        },
-      });
-    };
+  const handleAddPrescription = (appt) => {
+    navigate("/doctor/prescription/create", {
+      state: {
+        appointmentId: appt.id,
+        patientId: appt.patientId,
+        doctorId: appt.doctorId,
+        appointmentDate: appt.date,
+        startTime: appt.startTime,
+        endTime: appt.endTime,
+        patientName: appt.patientName,
+        doctorName: appt.doctorName,
+        reason: appt.reason,
+      },
+    });
+  };
 
   const handleEdit = (appt) => {
     navigate(`/doctor/prescription/edit/${appt.id}`, {
@@ -96,50 +103,86 @@ export default function DoctorAppointment() {
       <h2 className="text-2xl font-semibold mb-6 text-gray-800">
         Appointments
       </h2>
-      <div className="mb-4 text-gray-600">
-        <label htmlFor="patientId" className="block text-sm font-medium text-gray-700">
-          Patient ID
-        </label>
-        <input
-          type="text"
-          id="patientId"
-          value={patientId}
-          onChange={(e) => setPatientId(e.target.value)}
-          className="border px-3 py-2 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-400 outline-none"
-        />
-      </div>
+
 
       {/* Filters */}
-      <div className="flex flex-wrap gap-3 mb-6">
-        <input
-          type="date"
-          className="border px-3 py-2 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-400 outline-none"
-          value={startDate}
-          onChange={(e) => setStartDate(e.target.value)}
-        />
+      <div className="bg-white p-5 rounded-xl shadow mb-6">
+        <h3 className="text-lg font-semibold text-gray-700 mb-4">
+          Filter Appointments
+        </h3>
 
-        <input
-          type="date"
-          className="border px-3 py-2 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-400 outline-none"
-          value={endDate}
-          onChange={(e) => setEndDate(e.target.value)}
-        />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
 
-        <select
-          className="border px-3 py-2 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-400 outline-none"
-          value={appointmentStatus}
-          onChange={(e) => {
-            setAppointmentStatus(e.target.value);
-            setPage(0);
-          }}
-        >
-          <option value="">All Statuses</option>
-          {AllStatuses.map((status) => (
-            <option key={status} value={status}>
-              {status}
-            </option>
-          ))}
-        </select>
+          {/* Patient ID */}
+          <div className="flex flex-col">
+            <label className="text-xs text-gray-500 mb-1">Patient ID</label>
+            <input
+              type="text"
+              value={patientId}
+              onChange={(e) => setPatientId(e.target.value)}
+              placeholder="Enter patient ID"
+              className="border px-3 py-2 rounded-lg focus:ring-2 focus:ring-blue-400 outline-none"
+            />
+          </div>
+
+          {/* Start Date */}
+          <div className="flex flex-col">
+            <label className="text-xs text-gray-500 mb-1">Start Date</label>
+            <input
+              type="date"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+              className="border px-3 py-2 rounded-lg focus:ring-2 focus:ring-blue-400 outline-none"
+            />
+          </div>
+
+          {/* End Date */}
+          <div className="flex flex-col">
+            <label className="text-xs text-gray-500 mb-1">End Date</label>
+            <input
+              type="date"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+              className="border px-3 py-2 rounded-lg focus:ring-2 focus:ring-blue-400 outline-none"
+            />
+          </div>
+
+          {/* Status */}
+          <div className="flex flex-col">
+            <label className="text-xs text-gray-500 mb-1">Status</label>
+            <select
+              value={appointmentStatus}
+              onChange={(e) => {
+                setAppointmentStatus(e.target.value);
+                setPage(0);
+              }}
+              className="border px-3 py-2 rounded-lg focus:ring-2 focus:ring-blue-400 outline-none"
+            >
+              <option value="">All</option>
+              {AllStatuses.map((status) => (
+                <option key={status} value={status}>
+                  {status}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Buttons */}
+          <div className="flex items-end gap-2">
+            <button
+              onClick={() => {
+                setPatientId("");
+                setStartDate("");
+                setEndDate("");
+                setAppointmentStatus("");
+                setPage(0);
+              }}
+              className="w-full bg-gray-200 text-gray-700 py-2 rounded-lg hover:bg-gray-300 transition"
+            >
+              Reset
+            </button>
+          </div>
+        </div>
       </div>
 
       {/* Table */}
@@ -175,9 +218,9 @@ export default function DoctorAppointment() {
                     className="border-t hover:bg-gray-50 transition"
                   >
                     <td className="px-4 py-3">{appt.id}</td>
-                    <td className="px-4 py-3">{appt.date}</td>
+                    <td className="px-4 py-3">{formatDate(appt.date)}</td>
                     <td className="px-4 py-3">
-                      {appt.startTime} - {appt.endTime}
+                      {formatTime(appt.startTime)} - {formatTime(appt.endTime)}
                     </td>
 
                     <td className="px-4 py-3">
@@ -198,13 +241,12 @@ export default function DoctorAppointment() {
                     <td className="px-4 py-3 flex gap-2">
                       {/* Prescription */}
                       <button
-                        disabled={appt.status === "COMPLETED"|| appt.status === "CANCELLED"}
+                        disabled={appt.status === "COMPLETED" || appt.status === "CANCELLED"}
                         onClick={() => handleAddPrescription(appt)}
-                        className={`px-3 py-1 rounded-lg text-xs text-white ${
-                          appt.status === "CONFIRMED"
+                        className={`px-3 py-1 rounded-lg text-xs text-white ${appt.status === "CONFIRMED"
                             ? "bg-indigo-600 hover:bg-indigo-700"
                             : "bg-gray-300 cursor-not-allowed"
-                        }`}
+                          }`}
                       >
                         Prescription
                       </button>

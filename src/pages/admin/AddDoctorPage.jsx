@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { AdminAPI } from "../../api/AdminApi";
+import { UserAPI } from "../../api/UserApi";
+import { toast } from "react-toastify";
 
 const AddDoctorPage = () => {
   const [doctors, setDoctors] = useState([]);
@@ -7,6 +9,9 @@ const AddDoctorPage = () => {
   const [doctorName, setDoctorName] = useState("");
   const [specialization, setSpecialization] = useState("");
   const [status, setStatus] = useState("");
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [photoFile, setPhotoFile] = useState(null);
+  const [photoPreview, setPhotoPreview] = useState("");
   // ✅ Form state (MATCH BACKEND DTO)
   const [form, setForm] = useState({
     name: "",
@@ -19,6 +24,34 @@ const AddDoctorPage = () => {
     dateOfBirth: "",
     gender: "",
   });
+
+  // Persist doctor form draft
+  const doctorDraftKey = 'doctor_draft';
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(doctorDraftKey);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        setForm((f) => ({ ...f, ...parsed }));
+      }
+    } catch (err) {
+      console.error('failed to load doctor draft', err);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    const t = setTimeout(() => {
+      try {
+        localStorage.setItem(doctorDraftKey, JSON.stringify(form));
+      } catch (err) {
+        console.error('failed to save doctor draft', err);
+      }
+    }, 400);
+
+    return () => clearTimeout(t);
+  }, [form]);
 
   const [isEdit, setIsEdit] = useState(false);
   const [selectedId, setSelectedId] = useState(null);
@@ -40,6 +73,7 @@ const AddDoctorPage = () => {
     try {
       setLoading(true);
       const res = await AdminAPI.getDoctors(doctorName, specialization, status);
+      console.log("Fetched doctors:", res.data);
       setDoctors(res.data.content);
     } catch (err) {
       console.error("Fetch error:", err);
@@ -50,11 +84,41 @@ const AddDoctorPage = () => {
 
   useEffect(() => {
     fetchDoctors();
-  }, []);
+  }, [doctorName, specialization, status]);
 
   // ✅ Handle input change
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
+  };
+
+  const handlePhotoChange = (e) => {
+    const file = e.target.files?.[0] || null;
+    setPhotoFile(file);
+
+    if (file) {
+      setPhotoPreview(URL.createObjectURL(file));
+    }
+  };
+
+  const uploadPhoto = async () => {
+    if (!photoFile) {
+      toast.error("Please choose a photo first");
+      return;
+    }
+
+    try {
+      setUploadingPhoto(true);
+      const res = await UserAPI.updatephoto(photoFile);
+      console.log(res);
+      toast.success("Photo uploaded successfully");
+      setPhotoFile(null);
+      setPhotoPreview(res.data);
+    } catch (err) {
+      console.error("Photo upload failed:", err);
+      toast.error("Photo upload failed");
+    }finally {
+      setUploadingPhoto(false);
+    }
   };
 
   // ✅ Submit (CREATE + UPDATE)
@@ -75,6 +139,7 @@ const AddDoctorPage = () => {
       }
 
       resetForm();
+      try { localStorage.removeItem(doctorDraftKey); } catch {}
       fetchDoctors();
     } catch (err) {
       console.error("Submit error:", err);
@@ -83,6 +148,7 @@ const AddDoctorPage = () => {
 
   // ✅ Edit doctor
   const handleEdit = (doc) => {
+    console.log("Editing doctor:", doc);  
     setForm({
       name: doc.name || doc.doctorName || "",
       email: doc.email || "",
@@ -93,7 +159,9 @@ const AddDoctorPage = () => {
       specialization: doc.specialization || "",
       dateOfBirth: doc.dateOfBirth || "",
       gender: doc.gender || "",
+      profilePhoto: doc.profilePictureUrl||""
     });
+    setPhotoPreview(doc.profilePictureUrl || "");
 
     setSelectedId(doc.id || doc.doctorId);
     setIsEdit(true);
@@ -111,10 +179,14 @@ const AddDoctorPage = () => {
       specialization: "",
       dateOfBirth: "",
       gender: "",
+      profilePhoto: ""
     });
 
     setIsEdit(false);
     setSelectedId(null);
+    try { localStorage.removeItem(doctorDraftKey); } catch {}
+    setPhotoFile(null);
+    setPhotoPreview("");
   };
   useEffect(() => {
     fetchDoctors();
@@ -129,6 +201,37 @@ const AddDoctorPage = () => {
         onSubmit={handleSubmit}
         className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-white p-4 rounded shadow"
       >
+        <div className="md:col-span-3 rounded-lg border border-dashed border-slate-300 bg-slate-50 p-4">
+          <div className="flex flex-col gap-4 md:flex-row md:items-center">
+            <div className="h-20 w-20 overflow-hidden rounded-full bg-slate-300 flex items-center justify-center text-xl font-bold text-white">
+              {photoPreview ? (
+                <img src={form.profilePhoto} alt="Preview" className="h-full w-full object-cover" />
+              ) : (
+                "D"
+              )}
+            </div>
+
+            <div className="flex-1">
+              <label className="block text-sm font-medium text-slate-700">Profile photo</label>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handlePhotoChange}
+                className="mt-2 w-full"
+              />
+            </div>
+
+            <button
+              type="button"
+              onClick={uploadPhoto}
+              className={`rounded-lg bg-slate-900 px-4 py-2 text-white ${uploadingPhoto ? "cursor-not-allowed" : "hover:bg-slate-700"}`}
+              disabled={uploadingPhoto}
+            >
+              {uploadingPhoto ? "Uploading..." : "Upload Photo"}
+            </button>
+          </div>
+        </div>
+
         <input name="name" placeholder="Name" className="border p-2 rounded" value={form.name} onChange={handleChange} required />
 
         <input name="email" placeholder="Email" className="border p-2 rounded" value={form.email} onChange={handleChange} required />

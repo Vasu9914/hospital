@@ -9,7 +9,7 @@ export default function EditPrescription() {
   const navigate = useNavigate();
 
   const [loading, setLoading] = useState(false);
-
+  const [prescription, setPrescription] = useState(null);
   const [form, setForm] = useState({
     diagnosis: "",
     notes: "",
@@ -20,7 +20,8 @@ export default function EditPrescription() {
     const fetchData = async () => {
       const res = await PrescriptionAPI.getappointmentprescription(id);
       const data = res.data;
-
+      console.log("Fetched Data:", data);
+      setPrescription(data);
       setForm({
         diagnosis: data.diagnosis,
         notes: data.notes,
@@ -34,11 +35,9 @@ export default function EditPrescription() {
   const handleSubmit = async () => {
     try {
       setLoading(true);
-
-      await PrescriptionAPI.update(id, form);
-
-      toast.success("Updated");
-      navigate("/doctor/appointments");
+      console.log("Submitting Form:", form);
+      await PrescriptionAPI.update(prescription.id, form);
+      toast.success("Updated");    
     } catch {
       toast.error("Error");
     } finally {

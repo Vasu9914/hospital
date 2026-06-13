@@ -21,7 +21,7 @@ const EmailVerify = () => {
       toast.success("Verification link sent to your email!");
       setEmail("");
     } catch (error) {
-      toast.error(error?.response?.data?.message || "Failed to send");
+      
     } finally {
       setLoading(false);
     }

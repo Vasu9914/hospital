@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { AdminAPI } from "../../api/AdminApi";
+import DashboardNavbar from "../../components/DashboardNavbar";
 
 const SPECIALIZATIONS = [
   "cardiology", "dermatology", "neurology",
@@ -33,7 +34,7 @@ export const Dashboard = () => {
   const [filters, setFilters] = useState({
     doctorName: "",
     specialization: "",
-    startDate: "",
+    startDate: new Date().toISOString().split("T")[0],
     endDate: "",
   });
 
@@ -92,10 +93,10 @@ export const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
-      {/* Title */}
-      <h2 className="text-xl font-semibold text-gray-800 mb-6">
-        Admin Dashboard
-      </h2>
+      <DashboardNavbar
+        title="Admin Dashboard"
+        subtitle="Review clinic stats and manage doctors, appointments, and slots."
+      />
 
       {/* 🔥 Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-6">
