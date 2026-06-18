@@ -106,10 +106,14 @@ const AddDoctorPage = () => {
       toast.error("Please choose a photo first");
       return;
     }
+    if(!selectedId) {
+      toast.error("Please save doctor details before uploading photo");
+      return;
+    }
 
     try {
       setUploadingPhoto(true);
-      const res = await UserAPI.updatephoto(photoFile);
+      const res = await UserAPI.updatephoto(selectedId, photoFile);
       console.log(res);
       toast.success("Photo uploaded successfully");
       setPhotoFile(null);

@@ -5,6 +5,7 @@ import { toast } from "react-toastify";
 import DatePicker from "../../components/DatePicker";
 import { formatDisplayDate } from "../../utils/helper";
 
+
 export const Profile = () => {
   const [doctor, setDoctor] = useState(null);
   const [formData, setFormData] = useState({});
@@ -74,7 +75,7 @@ export const Profile = () => {
       const res = await UserAPI.updatephoto(photoFile);
       console.log(res);
       toast.success("Profile photo uploaded successfully");
-      setPhotoPreview(res.data);
+      setPhotoPreview(res.data || "");
       setPhotoFile(null);
       
     } catch (error) {

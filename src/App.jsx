@@ -71,11 +71,11 @@ export default function App() {
           </ProtectedRoute>
         } />
 
-        <Route path="/doctor/appointments" element={
+        {/* <Route path="/doctor/appointments" element={
           <ProtectedRoute allowedRoles={['DOCTOR']}>
             <DoctorAppointment />
           </ProtectedRoute>
-        } />
+        } /> */}
         <Route path="/doctor/prescription/create" element={
           <ProtectedRoute allowedRoles={['DOCTOR']}>
             <CreatePrescription />

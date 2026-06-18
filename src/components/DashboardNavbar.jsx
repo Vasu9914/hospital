@@ -16,7 +16,7 @@ const navItemsByRole = {
   DOCTOR: [
     { label: 'Dashboard', to: '/doctor/dashboard' },
     { label: 'Profile', to: '/doctor/profile' },
-    { label: 'Appointments', to: '/doctor/appointments' },
+    // { label: 'Appointments', to: '/doctor/appointments' },
     { label: 'View Availability', to: '/doctor/availability/view' }, 
     { label: 'Slots', to: '/doctor/slots' },
   ],

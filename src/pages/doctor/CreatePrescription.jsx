@@ -82,7 +82,7 @@ export default function CreatePrescription() {
 
       toast.success("Created");
       try { localStorage.removeItem(draftKey); } catch {}
-      navigate("/doctor/appointments");
+      navigate("/doctor/dashboard");
     } catch {
       toast.error("Error");
     } finally {
