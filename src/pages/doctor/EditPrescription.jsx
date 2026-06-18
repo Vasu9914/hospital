@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { PrescriptionAPI } from "../../api/PrescriptionAPI";
-import PrescriptionForm from "../../components/PrescriptionForm";
+import { PrescriptionAPI } from "../../api/PrescriptionAPI.js";
+import PrescriptionForm from "../../components/PrescriptionForm.jsx";
 import { toast } from "react-toastify";
 
 export default function EditPrescription() {

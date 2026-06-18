@@ -1,6 +1,6 @@
 import { Navigate } from 'react-router-dom';
-import { isLoggedIn, getRole } from '../utils/auth';
-import DashboardNavbar from './DashboardNavbar';
+import { isLoggedIn, getRole } from '../utils/auth.js';
+import DashboardNavbar from './DashboardNavbar.jsx';
 
 export default function ProtectedRoute({ children, allowedRoles }) {
   if (!isLoggedIn()) {

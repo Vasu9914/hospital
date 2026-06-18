@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { AdminAPI } from "../../api/AdminApi";
+import { AdminAPI } from "../../api/AdminApi.js";
 
 const DoctorsPage = () => {
   const navigate = useNavigate();
