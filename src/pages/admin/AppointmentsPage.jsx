@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from "react";
-import { AppointmentAPI } from "../../api/AppointmentApi";
-import { DoctorAPI } from "../../api/DoctorApi";
-import { PatientAPI } from "../../api/PatientApi";
-import { PrescriptionAPI } from "../../api/PrescriptionApi";
+import { AppointmentAPI } from "../../api/AppointmentApi.js";
+import { DoctorAPI } from "../../api/DoctorApi.js";
+import { PatientAPI } from "../../api/PatientApi.js";
+import { PrescriptionAPI } from "../../api/PrescriptionApi.js";
 import { toast } from "react-toastify";
-import { formatTime, formatDisplayDate } from "../../utils/helper";
+import { formatTime, formatDisplayDate } from "../../utils/helper.js";
 import DatePicker from "../../components/DatePicker";
 
 export default function AppointmentsPage() {

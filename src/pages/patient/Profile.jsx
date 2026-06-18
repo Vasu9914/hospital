@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { PatientAPI } from '../../api/PatientApi';
+import { PatientAPI } from '../../api/PatientApi.js';
 import { toast } from 'react-toastify';
 
 const Profile = () => {

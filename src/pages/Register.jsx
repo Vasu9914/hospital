@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { AuthAPI } from '../api/authApi';
+import { AuthAPI } from '../api/authApi.js';
 import { toast } from 'react-toastify';
 
 export default function Register() {
