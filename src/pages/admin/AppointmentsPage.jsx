@@ -4,7 +4,8 @@ import { DoctorAPI } from "../../api/DoctorApi";
 import { PatientAPI } from "../../api/PatientApi";
 import { PrescriptionAPI } from "../../api/PrescriptionApi";
 import { toast } from "react-toastify";
-import { formatTime, formatDate } from "../../utils/helper";
+import { formatTime, formatDisplayDate } from "../../utils/helper";
+import DatePicker from "../../components/DatePicker";
 
 export default function AppointmentsPage() {
   const [appointments, setAppointments] = useState([]);
@@ -100,59 +101,82 @@ export default function AppointmentsPage() {
       <h2 className="text-xl font-semibold mb-6">Appointments</h2>
 
       {/* 🔍 FILTERS */}
-      <div className="flex flex-wrap gap-4 mb-6">
+      <div className="bg-white p-5 rounded-xl shadow-sm mb-6">
+        <h3 className="text-sm font-semibold text-gray-700 mb-4">Filter appointments</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
 
-        {/* Doctor */}
-        <input
-          type="text"
-          placeholder="Doctor..."
-          value={doctorName}
-          onChange={(e) => {
-            setDoctorName(e.target.value);
-            fetchDoctors(e.target.value);
-          }}
-          className="px-3 py-2 border rounded-md bg-white"
-        />
+          <div>
+            <label className="block text-xs font-medium text-gray-500 mb-1">Doctor</label>
+            <input
+              type="text"
+              placeholder="Search doctor..."
+              value={doctorName}
+              onChange={(e) => {
+                setDoctorName(e.target.value);
+                fetchDoctors(e.target.value);
+              }}
+              className="w-full px-3 py-2.5 border border-gray-200 rounded-xl shadow-sm bg-white"
+            />
+          </div>
 
-        {/* Patient */}
-        <input
-          type="text"
-          placeholder="Patient..."
-          value={patientName}
-          onChange={(e) => {
-            setPatientName(e.target.value);
-            fetchPatients(e.target.value);
-          }}
-          className="px-3 py-2 border rounded-md bg-white"
-        />
+          <div>
+            <label className="block text-xs font-medium text-gray-500 mb-1">Patient</label>
+            <input
+              type="text"
+              placeholder="Search patient..."
+              value={patientName}
+              onChange={(e) => {
+                setPatientName(e.target.value);
+                fetchPatients(e.target.value);
+              }}
+              className="w-full px-3 py-2.5 border border-gray-200 rounded-xl shadow-sm bg-white"
+            />
+          </div>
 
-        {/* Date */}
-        <input type="date" value={startDate} onChange={(e)=>setStartDate(e.target.value)} className="border px-3 py-2"/>
-        <input type="date" value={endDate} onChange={(e)=>setEndDate(e.target.value)} className="border px-3 py-2"/>
+          <DatePicker
+            label="From"
+            value={startDate}
+            onChange={setStartDate}
+          />
 
-        {/* Status */}
-        <select value={status} onChange={(e)=>setStatus(e.target.value)} className="border px-3 py-2">
-          <option value="">All</option>
-          <option value="CONFIRMED">Confirmed</option>
-          <option value="COMPLETED">Completed</option>
-          <option value="CANCELLED">Cancelled</option>
-        </select>
+          <DatePicker
+            label="To"
+            value={endDate}
+            onChange={setEndDate}
+            minDate={startDate}
+          />
 
-        {/* Clear */}
-        <button
-          onClick={()=>{
-            setDoctorId(null);
-            setPatientId(null);
-            setDoctorName("");
-            setPatientName("");
-            setStartDate("");
-            setEndDate("");
-            setStatus("");
-          }}
-          className="px-4 py-2 bg-gray-200 rounded"
-        >
-          Clear
-        </button>
+          <div>
+            <label className="block text-xs font-medium text-gray-500 mb-1">Status</label>
+            <select
+              value={status}
+              onChange={(e) => setStatus(e.target.value)}
+              className="w-full border border-gray-200 px-3 py-2.5 rounded-xl shadow-sm bg-white"
+            >
+              <option value="">All</option>
+              <option value="CONFIRMED">Confirmed</option>
+              <option value="COMPLETED">Completed</option>
+              <option value="CANCELLED">Cancelled</option>
+            </select>
+          </div>
+
+          <div className="flex items-end">
+            <button
+              onClick={() => {
+                setDoctorId(null);
+                setPatientId(null);
+                setDoctorName("");
+                setPatientName("");
+                setStartDate("");
+                setEndDate("");
+                setStatus("");
+              }}
+              className="w-full px-4 py-2.5 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition"
+            >
+              Clear
+            </button>
+          </div>
+        </div>
       </div>
 
       {/* 📊 TABLE */}
@@ -174,7 +198,7 @@ export default function AppointmentsPage() {
 
                 <tr className="border-t hover:bg-gray-50">
                   <td className="px-6 py-4">{appt.id}</td>
-                  <td className="px-6 py-4">{formatDate(appt.date)}</td>
+                  <td className="px-6 py-4">{formatDisplayDate(appt.date)}</td>
                   <td className="px-6 py-4">
                     {formatTime(appt.startTime)} – {formatTime(appt.endTime)}
                   </td>
@@ -192,11 +216,7 @@ export default function AppointmentsPage() {
                       className="px-3 py-1 bg-green-600 text-white rounded"
                     >
                       {selectedAppointmentId === appt.id ? "Hide" : "View"}
-                    </button>
-
-                    <button className="px-3 py-1 bg-blue-600 text-white rounded">
-                      Add Rx
-                    </button>
+                    </button>                    
                   </td>
                 </tr>
 

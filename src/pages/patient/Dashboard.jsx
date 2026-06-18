@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { DoctorAPI } from "../../api/DoctorApi";
-import DashboardNavbar from "../../components/DashboardNavbar";
 
 export const Dashboard = () => {
   const [doctors, setDoctors] = useState([]);
@@ -53,10 +52,7 @@ export const Dashboard = () => {
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
-      <DashboardNavbar
-        title="Patient Dashboard"
-        subtitle="Find doctors and book an appointment from one place."
-      />
+    
 
       {/* ================= FILTER CARD ================= */}
       <div className="bg-white p-5 rounded-xl shadow mb-6">

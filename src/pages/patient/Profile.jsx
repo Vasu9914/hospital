@@ -1,99 +1,70 @@
 import React, { useEffect, useState } from 'react';
 import { PatientAPI } from '../../api/PatientApi';
-import { UserAPI } from '../../api/UserApi';
 import { toast } from 'react-toastify';
 
 const Profile = () => {
 
-  // ✅ initialize (VERY IMPORTANT)
   const [profile, setProfile] = useState({
     name: "",
     email: "",
     phoneNumber: "",
     gender: "MALE",
     dateOfBirth: "",
-    address: ""
+    address: "",
+    bloodGroup: "",
+    allergies: "",
+    medicalHistory: "",
+    emergencyContactNumber: ""
   });
 
   const [loading, setLoading] = useState(false);
-  const [photoFile, setPhotoFile] = useState(null);
-  const [photoPreview, setPhotoPreview] = useState("");
 
+  // ✅ GET PROFILE
   const getProfile = async () => {
     try {
-      setLoading(true);
       const res = await PatientAPI.getProfile();
 
-      // ✅ merge safely
-      setProfile(prev => ({
-        ...prev,
-        ...res.data
-      }));
+      setProfile({
+        name: res.data.name || "",
+        email: res.data.email || "",
+        phoneNumber: res.data.phoneNumber || "",
+        gender: res.data.gender || "MALE",
+        dateOfBirth: res.data.dateOfBirth || "",
+        address: res.data.address || "",
+        bloodGroup: res.data.bloodGroup || "",
+        allergies: res.data.allergies || "",
+        medicalHistory: res.data.medicalHistory || "",
+        emergencyContactNumber: res.data.emergencyContactNumber || ""
+      });
 
-      setPhotoPreview(res.data?.photoUrl || res.data?.profilePhoto || res.data?.imageUrl || "");
-
-    } catch (error) {
-      console.log(error);
+    } catch (err) {
       toast.error("Failed to load profile ❌");
-    } finally {
-      setLoading(false);
     }
   };
 
+  // ✅ UPDATE PROFILE
   const updateProfile = async () => {
 
     const payload = {
       name: profile.name,
-      dateOfBirth: profile.dateOfBirth,
-      gender: profile.gender,
       phoneNumber: profile.phoneNumber,
-      address: profile.address || ""
+      gender: profile.gender,
+      dateOfBirth: profile.dateOfBirth,
+      address: profile.address,
+      bloodGroup: profile.bloodGroup,
+      allergies: profile.allergies,
+      medicalHistory: profile.medicalHistory,
+      emergencyContactNumber: profile.emergencyContactNumber
     };
-
-    const previousProfile = { ...profile };
 
     try {
       setLoading(true);
-
       await PatientAPI.updateProfile(payload);
-
       toast.success("Profile updated ✅");
-
-    } catch (error) {
-      
-
-      // rollback
-      setProfile(previousProfile);
-
+    } catch (err) {
       toast.error("Update failed ❌");
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handlePhotoChange = (e) => {
-    const file = e.target.files?.[0] || null;
-    setPhotoFile(file);
-
-    if (file) {
-      setPhotoPreview(URL.createObjectURL(file));
-    }
-  };
-
-  const uploadPhoto = async () => {
-    if (!photoFile) {
-      toast.error("Please choose a photo first");
-      return;
-    }
-
-    try {
-      await UserAPI.updatephoto(photoFile);
-      toast.success("Profile photo uploaded ✅");
-      setPhotoFile(null);
-      getProfile();
-    } catch (error) {
-      console.log(error);
-      toast.error("Photo upload failed ❌");
     }
   };
 
@@ -102,120 +73,111 @@ const Profile = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-blue-50 to-gray-100 flex justify-center items-center p-6">
+    <div className="min-h-screen flex justify-center items-center bg-gray-100 p-6">
 
-      <div className="bg-white w-full max-w-lg p-8 rounded-2xl shadow-xl">
+      <div className="bg-white w-full max-w-lg p-6 rounded-xl shadow-lg">
 
-        <h1 className="text-2xl font-bold text-center mb-6 text-gray-800">
-          My Profile
-        </h1>
+        <h2 className="text-xl font-bold mb-4 text-center">My Profile</h2>
 
-        <div className="mb-6 flex flex-col items-center gap-3">
-          <div className="h-24 w-24 overflow-hidden rounded-full bg-blue-500 text-white flex items-center justify-center text-2xl font-bold">
-            {photoPreview ? (
-              <img src={photoPreview} alt="Profile" className="h-full w-full object-cover" />
-            ) : (
-              profile.name?.charAt(0)?.toUpperCase() || "P"
-            )}
-          </div>
+        {/* Name */}
+        <input
+          placeholder="Name"
+          value={profile.name}
+          onChange={(e) => setProfile({ ...profile, name: e.target.value })}
+          className="w-full border p-2 mb-2 rounded"
+        />
 
-          <div className="w-full">
-            <label className="text-sm text-gray-600">Profile photo</label>
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handlePhotoChange}
-              className="w-full border rounded-lg p-2 mt-1 bg-white"
-            />
-            <button
-              type="button"
-              onClick={uploadPhoto}
-              className="w-full mt-2 rounded-lg bg-slate-900 py-2 text-white hover:bg-slate-700"
-            >
-              Upload Photo
-            </button>
-          </div>
-        </div>
+        {/* Email (disabled) */}
+        <input
+          value={profile.email}
+          disabled
+          className="w-full border p-2 mb-2 rounded bg-gray-100"
+        />
 
-        <div className="space-y-4">
+        {/* Phone */}
+        <input
+          placeholder="Phone"
+          value={profile.phoneNumber}
+          onChange={(e) => setProfile({ ...profile, phoneNumber: e.target.value })}
+          className="w-full border p-2 mb-2 rounded"
+        />
 
-          {/* Name */}
-          <div>
-            <label className="text-sm text-gray-600">Full Name</label>
-            <input
-              value={profile.name}
-              onChange={(e) =>
-                setProfile({ ...profile, name: e.target.value })
-              }
-              className="w-full border rounded-lg p-2 mt-1 focus:ring-2 focus:ring-blue-400"
-            />
-          </div>
+        {/* Gender */}
+        <select
+          value={profile.gender}
+          onChange={(e) => setProfile({ ...profile, gender: e.target.value })}
+          className="w-full border p-2 mb-2 rounded"
+        >
+          <option value="MALE">Male</option>
+          <option value="FEMALE">Female</option>
+          <option value="OTHER">Other</option>
+        </select>
 
-          {/* Email */}
-          <div>
-            <label className="text-sm text-gray-600">Email</label>
-            <input
-              value={profile.email}
-              disabled
-              className="w-full border rounded-lg p-2 mt-1 bg-gray-100"
-            />
-          </div>
+        {/* DOB */}
+        <input
+          type="date"
+          value={profile.dateOfBirth}
+          onChange={(e) => setProfile({ ...profile, dateOfBirth: e.target.value })}
+          className="w-full border p-2 mb-2 rounded"
+        />
 
-          {/* Phone */}
-          <div>
-            <label className="text-sm text-gray-600">Phone</label>
-            <input
-              value={profile.phoneNumber}
-              onChange={(e) =>
-                setProfile({ ...profile, phoneNumber: e.target.value })
-              }
-              className="w-full border rounded-lg p-2 mt-1 focus:ring-2 focus:ring-blue-400"
-            />
-          </div>
+        {/* Address */}
+        <input
+          placeholder="Address"
+          value={profile.address}
+          onChange={(e) => setProfile({ ...profile, address: e.target.value })}
+          className="w-full border p-2 mb-2 rounded"
+        />
 
-          {/* Gender */}
-          <div>
-            <label className="text-sm text-gray-600">Gender</label>
-            <select
-              value={profile.gender}
-              onChange={(e) =>
-                setProfile({ ...profile, gender: e.target.value })
-              }
-              className="w-full border rounded-lg p-2 mt-1"
-            >
-              <option value="MALE">Male</option>
-              <option value="FEMALE">Female</option>
-              <option value="OTHER">Other</option>
-            </select>
-          </div>
+        {/* Blood Group */}
+        <select
+          value={profile.bloodGroup}
+          onChange={(e) => setProfile({ ...profile, bloodGroup: e.target.value })}
+          className="w-full border p-2 mb-2 rounded"
+        >
+          <option value="">Select Blood Group</option>
+          <option value="O_POSITIVE">O+</option>
+          <option value="A_POSITIVE">A+</option>
+          <option value="B_POSITIVE">B+</option>
+          <option value="AB_POSITIVE">AB+</option>
+        </select>
 
-          {/* DOB */}
-          <div>
-            <label className="text-sm text-gray-600">Date of Birth</label>
-            <input
-              type="date"
-              value={profile.dateOfBirth || ""}
-              onChange={(e) =>
-                setProfile({ ...profile, dateOfBirth: e.target.value })
-              }
-              className="w-full border rounded-lg p-2 mt-1"
-            />
-          </div>
+        {/* Allergies */}
+        <input
+          placeholder="Allergies"
+          value={profile.allergies}
+          onChange={(e) => setProfile({ ...profile, allergies: e.target.value })}
+          className="w-full border p-2 mb-2 rounded"
+        />
 
-        </div>
+        {/* Medical History */}
+        <input
+          placeholder="Medical History"
+          value={profile.medicalHistory}
+          onChange={(e) => setProfile({ ...profile, medicalHistory: e.target.value })}
+          className="w-full border p-2 mb-2 rounded"
+        />
 
+        {/* Emergency Contact */}
+        <input
+          placeholder="Emergency Contact"
+          value={profile.emergencyContactNumber}
+          onChange={(e) => setProfile({ ...profile, emergencyContactNumber: e.target.value })}
+          className="w-full border p-2 mb-4 rounded"
+        />
+
+        {/* Update Button */}
         <button
           onClick={updateProfile}
           disabled={loading}
-          className={`w-full mt-6 py-2 rounded-lg text-white ${
-            loading ? 'bg-gray-400' : 'bg-blue-500 hover:bg-blue-600'
+          className={`w-full py-2 rounded text-white ${
+            loading ? "bg-gray-400" : "bg-blue-500 hover:bg-blue-600"
           }`}
         >
           {loading ? "Updating..." : "Update Profile"}
         </button>
 
       </div>
-
     </div>
   );
 };

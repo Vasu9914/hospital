@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { AdminAPI } from "../../api/AdminApi";
-import DashboardNavbar from "../../components/DashboardNavbar";
+import DatePicker from "../../components/DatePicker";
 
 const SPECIALIZATIONS = [
   "cardiology", "dermatology", "neurology",
@@ -93,10 +93,7 @@ export const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
-      <DashboardNavbar
-        title="Admin Dashboard"
-        subtitle="Review clinic stats and manage doctors, appointments, and slots."
-      />
+      
 
       {/* 🔥 Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-6">
@@ -107,49 +104,74 @@ export const Dashboard = () => {
       </div>
 
       {/* 🔍 Filters */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6 bg-white p-5 rounded-2xl border shadow-sm">
-        <input
-          type="text"
-          placeholder="Doctor name"
-          value={filters.doctorName}
-          onChange={(e) =>
-            setFilters({ ...filters, doctorName: e.target.value })
-          }
-          className="border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-        />
+      <div className="mb-6 bg-white p-5 rounded-2xl border shadow-sm">
+        <h3 className="text-sm font-semibold text-gray-700 mb-4">Filter doctor stats</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+          <div>
+            <label className="block text-xs font-medium text-gray-500 mb-1">Doctor name</label>
+            <input
+              type="text"
+              placeholder="Search name..."
+              value={filters.doctorName}
+              onChange={(e) =>
+                setFilters({ ...filters, doctorName: e.target.value })
+              }
+              className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-100"
+            />
+          </div>
 
-        <select
-          value={filters.specialization}
-          onChange={(e) =>
-            setFilters({ ...filters, specialization: e.target.value })
-          }
-          className="border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-        >
-          <option value="">All specializations</option>
-          {SPECIALIZATIONS.map((s) => (
-            <option key={s} value={s}>
-              {s}
-            </option>
-          ))}
-        </select>
+          <div>
+            <label className="block text-xs font-medium text-gray-500 mb-1">Specialization</label>
+            <select
+              value={filters.specialization}
+              onChange={(e) =>
+                setFilters({ ...filters, specialization: e.target.value })
+              }
+              className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm shadow-sm bg-white"
+            >
+              <option value="">All specializations</option>
+              {SPECIALIZATIONS.map((s) => (
+                <option key={s} value={s}>
+                  {s}
+                </option>
+              ))}
+            </select>
+          </div>
 
-        <input
-          type="date"
-          value={filters.startDate}
-          onChange={(e) =>
-            setFilters({ ...filters, startDate: e.target.value })
-          }
-          className="border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-        />
+          <DatePicker
+            label="From"
+            value={filters.startDate}
+            onChange={(startDate) =>
+              setFilters({ ...filters, startDate })
+            }
+          />
 
-        <input
-          type="date"
-          value={filters.endDate}
-          onChange={(e) =>
-            setFilters({ ...filters, endDate: e.target.value })
-          }
-          className="border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-        />
+          <DatePicker
+            label="To"
+            value={filters.endDate}
+            onChange={(endDate) =>
+              setFilters({ ...filters, endDate })
+            }
+            minDate={filters.startDate}
+          />
+
+          <div className="flex items-end">
+            <button
+              type="button"
+              onClick={() =>
+                setFilters({
+                  doctorName: "",
+                  specialization: "",
+                  startDate: "",
+                  endDate: "",
+                })
+              }
+              className="w-full bg-gray-100 text-gray-700 py-2.5 rounded-xl hover:bg-gray-200 transition"
+            >
+              Reset
+            </button>
+          </div>
+        </div>
       </div>
 
       {/* 📊 Table */}

@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import ProtectedRoute from './components/ProtectedRoute';
 import Login from './pages/Login';
+import Register from './pages/Register';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { Dashboard as PatientDashboard } from './pages/patient/Dashboard';
@@ -31,8 +32,8 @@ export default function App() {
     <BrowserRouter>
 
       <Routes>  
-        {/* Public */}
         <Route path="/login" element={<Login />} />
+        <Route path="/auth/register" element={<Register />} />
 
         {/* PATIENT only */}
         <Route path="/patient/dashboard" element={
@@ -138,8 +139,12 @@ export default function App() {
         <Route path="/auth/verification" element={<VerifyTokenPage />} />
 
         <Route path="/unauthorized" element={<Unauthorized />} />
+
+        
+
         {/* Catch-all */}
         <Route path="*" element={<NotFound />} />
+
       </Routes>
 
       {/* ✅ THIS WAS MISSING */}

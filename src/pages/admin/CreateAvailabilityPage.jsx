@@ -2,7 +2,8 @@ import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { AvailabilityAPI } from "../../api/AvailabilityApi";
 import { SlotAPI } from "../../api/SlotApi";
-import { formatTime, formatDate } from "../../utils/helper";
+import { formatTime, formatDisplayDate } from "../../utils/helper";
+import DatePicker from "../../components/DatePicker";
 
 // ✅ Status badge
 const statusBadge = (status) => {
@@ -176,36 +177,53 @@ export function CreateAvailabilityPage() {
       </div>
 
       {/* Filters */}
-      <div className="flex gap-4 mb-6 flex-wrap">
-        <input
-          type="date"
-          className="px-3 py-2 border rounded-md bg-white"
-          value={filters.startDate}
-          onChange={(e) =>
-            setFilters({ ...filters, startDate: e.target.value })
-          }
-        />
+      <div className="bg-white p-5 rounded-xl shadow-sm mb-6">
+        <h3 className="text-sm font-semibold text-gray-700 mb-4">Filter availability</h3>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <DatePicker
+            label="From"
+            value={filters.startDate}
+            onChange={(startDate) =>
+              setFilters({ ...filters, startDate })
+            }
+          />
 
-        <input
-          type="date"
-          className="px-3 py-2 border rounded-md bg-white"
-          value={filters.endDate}
-          onChange={(e) =>
-            setFilters({ ...filters, endDate: e.target.value })
-          }
-        />
+          <DatePicker
+            label="To"
+            value={filters.endDate}
+            onChange={(endDate) =>
+              setFilters({ ...filters, endDate })
+            }
+            minDate={filters.startDate}
+          />
 
-        <select
-          className="px-3 py-2 border rounded-md bg-white"
-          value={filters.availabilityStatus}
-          onChange={(e) =>
-            setFilters({ ...filters, availabilityStatus: e.target.value })
-          }
-        >
-          <option value="">All</option>
-          <option value="ACTIVE">Active</option>
-          <option value="INACTIVE">Inactive</option>
-        </select>
+          <div>
+            <label className="block text-xs font-medium text-gray-500 mb-1">Status</label>
+            <select
+              className="w-full px-3 py-2.5 border border-gray-200 rounded-xl shadow-sm bg-white"
+              value={filters.availabilityStatus}
+              onChange={(e) =>
+                setFilters({ ...filters, availabilityStatus: e.target.value })
+              }
+            >
+              <option value="">All</option>
+              <option value="ACTIVE">Active</option>
+              <option value="INACTIVE">Inactive</option>
+            </select>
+          </div>
+
+          <div className="flex items-end">
+            <button
+              type="button"
+              onClick={() =>
+                setFilters({ startDate: "", endDate: "", availabilityStatus: "" })
+              }
+              className="w-full px-4 py-2.5 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition"
+            >
+              Reset
+            </button>
+          </div>
+        </div>
       </div>
 
       {/* Table */}
@@ -226,7 +244,7 @@ export function CreateAvailabilityPage() {
               <React.Fragment key={item.id}>
                 <tr className="border-t hover:bg-gray-50">
                   <td className="px-6 py-4">{item.id}</td>
-                  <td className="px-6 py-4">{formatDate(item.date)}</td>
+                  <td className="px-6 py-4">{formatDisplayDate(item.date)}</td>
                   <td className="px-6 py-4">{formatTime(item.startTime)}</td>
                   <td className="px-6 py-4">{formatTime(item.endTime)}</td>
                   <td className="px-6 py-4">{statusBadge(item.availabilityStatus)}</td>
@@ -283,8 +301,11 @@ export function CreateAvailabilityPage() {
 
             <div className="space-y-3">
 
-              <input type="date" name="date" value={form.date}
-                onChange={handleFormChange} className="w-full border p-2 rounded" />
+              <DatePicker
+                label="Date"
+                value={form.date}
+                onChange={(date) => setForm({ ...form, date })}
+              />
 
               <input type="time" name="startTime" value={form.startTime}
                 onChange={handleFormChange} className="w-full border p-2 rounded" />

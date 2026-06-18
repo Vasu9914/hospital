@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { AppointmentAPI } from "../../api/AppointmentApi";
 import { PrescriptionAPI } from "../../api/PrescriptionApi";
+import DatePicker from "../../components/DatePicker";
+import { formatDisplayDate, formatTime } from "../../utils/helper";
 
 export default function Appointment() {
   const { doctorId } = useParams();
@@ -38,7 +40,7 @@ export default function Appointment() {
         pageNo,
         3
       );
-
+      console.log(res.data?.content);
       setAppointments(res.data?.content || []);
       setTotalPages(res.data?.totalPages || 1);
       setPage(pageNo);
@@ -51,14 +53,14 @@ export default function Appointment() {
 
   useEffect(() => {
     if (doctorId) getAppointments(0);
-  }, [doctorId]);
+  }, [doctorId, filters]);
 
   // ================= PRESCRIPTION =================
   const fetchPrescriptions = async (appointmentId) => {
     try {
       const res =
         await PrescriptionAPI.getappointmentprescription(appointmentId);
-
+      
       setSelectedPrescription(res.data.data || res.data);
       setShowModal(true);
     } catch (err) {
@@ -77,48 +79,57 @@ export default function Appointment() {
 
         {/* ================= FILTER CARD ================= */}
         <div className="bg-white p-5 rounded-xl shadow mb-6">
-          <div className="grid md:grid-cols-4 gap-3">
+          <h3 className="text-sm font-semibold text-gray-700 mb-4">
+            Filter appointments
+          </h3>
+          <div className="grid md:grid-cols-4 gap-4">
 
-            <input
-              type="date"
+            <DatePicker
+              label="From"
               value={filters.startDate}
-              onChange={(e) =>
-                setFilters({ ...filters, startDate: e.target.value })
+              onChange={(startDate) =>
+                setFilters({ ...filters, startDate })
               }
-              className="border p-2 rounded-lg"
             />
 
-            <input
-              type="date"
+            <DatePicker
+              label="To"
               value={filters.endDate}
-              onChange={(e) =>
-                setFilters({ ...filters, endDate: e.target.value })
+              onChange={(endDate) =>
+                setFilters({ ...filters, endDate })
               }
-              className="border p-2 rounded-lg"
+              minDate={filters.startDate}
             />
 
-            <select
-              value={filters.status}
-              onChange={(e) =>
-                setFilters({ ...filters, status: e.target.value })
-              }
-              className="border p-2 rounded-lg"
-            >
-              <option value="">All</option>
-              {allStatuses.map((s) => (
-                <option key={s}>{s}</option>
-              ))}
-            </select>
+            <div>
+              <label className="block text-xs font-medium text-gray-500 mb-1">
+                Status
+              </label>
+              <select
+                value={filters.status}
+                onChange={(e) =>
+                  setFilters({ ...filters, status: e.target.value })
+                }
+                className="w-full border border-gray-200 px-3 py-2.5 rounded-xl shadow-sm"
+              >
+                <option value="">All</option>
+                {allStatuses.map((s) => (
+                  <option key={s}>{s}</option>
+                ))}
+              </select>
+            </div>
 
-            <button
-              onClick={() => {
-                setFilters({ startDate: "", endDate: "", status: "" });
-                getAppointments(0);
-              }}
-              className="bg-gray-200 rounded-lg hover:bg-gray-300"
-            >
-              Reset
-            </button>
+            <div className="flex items-end">
+              <button
+                onClick={() => {
+                  setFilters({ startDate: "", endDate: "", status: "" });
+                  getAppointments(0);
+                }}
+                className="w-full bg-gray-100 text-gray-700 py-2.5 rounded-xl hover:bg-gray-200 transition"
+              >
+                Reset
+              </button>
+            </div>
           </div>
         </div>
 
@@ -137,16 +148,21 @@ export default function Appointment() {
           {appointments.map((a) => (
             <div
               key={a.id}
-              className="bg-white p-5 rounded-xl shadow hover:shadow-lg transition"
+              className="bg-white p-5 rounded-xl shadow hover:shadow-lg transition border border-gray-100"
             >
-              <div className="flex justify-between items-center mb-2">
+              <div className="flex justify-between items-start gap-3 mb-3">
 
-                <h2 className="font-semibold text-gray-800">
-                  {a.date}
-                </h2>
+                <div>
+                  <p className="text-xs font-medium uppercase tracking-wide text-blue-600">
+                    {formatDisplayDate(a.date, "short")}
+                  </p>
+                  <h2 className="font-semibold text-gray-800 mt-1">
+                    {formatDisplayDate(a.date, "long")}
+                  </h2>
+                </div>
 
                 <span
-                  className={`text-xs px-2 py-1 rounded ${a.status === "CONFIRMED"
+                  className={`text-xs px-2.5 py-1 rounded-full font-medium shrink-0 ${a.status === "CONFIRMED"
                       ? "bg-green-100 text-green-700"
                       : a.status === "COMPLETED"
                         ? "bg-blue-100 text-blue-700"
@@ -158,7 +174,7 @@ export default function Appointment() {
               </div>
 
               <p className="text-sm text-gray-600">
-                {a.startTime} - {a.endTime}
+                {formatTime(a.startTime)} – {formatTime(a.endTime)}
               </p>
 
               <p className="mt-2">
@@ -229,7 +245,8 @@ export default function Appointment() {
             <p><b>Patient:</b> {selectedPrescription.patientName}</p>
             <p>
               <b>Date:</b>{" "}
-              {new Date(selectedPrescription.createdAt).toLocaleString()}
+              {formatDisplayDate(selectedPrescription.createdAt, "long")}{" "}
+              at {formatTime(selectedPrescription.createdAt)}
             </p>
 
             <h3 className="mt-4 font-semibold">Medicines</h3>

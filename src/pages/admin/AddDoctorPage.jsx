@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { AdminAPI } from "../../api/AdminApi";
 import { UserAPI } from "../../api/UserApi";
 import { toast } from "react-toastify";
+import DatePicker from "../../components/DatePicker";
 
 const AddDoctorPage = () => {
   const [doctors, setDoctors] = useState([]);
@@ -249,7 +250,11 @@ const AddDoctorPage = () => {
           ))}
         </select>
 
-        <input type="date" name="dateOfBirth" className="border p-2 rounded" value={form.dateOfBirth} onChange={handleChange} required />
+        <DatePicker
+          label="Date of Birth"
+          value={form.dateOfBirth}
+          onChange={(dateOfBirth) => setForm({ ...form, dateOfBirth })}
+        />
 
         <select name="gender" className="border p-2 rounded" value={form.gender} onChange={handleChange} required>
           <option value="">Select Gender</option>

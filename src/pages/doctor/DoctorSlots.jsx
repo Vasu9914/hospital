@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { SlotAPI } from "../../api/SlotAPI";
 import { toast } from "react-toastify";
+import DatePicker from "../../components/DatePicker";
+import { formatDisplayDate, formatTime } from "../../utils/helper";
 
 export default function DoctorSlots() {
   const [slots, setSlots] = useState([]);
@@ -107,38 +109,31 @@ export default function DoctorSlots() {
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
 
-          {/* Start Date */}
-          <div>
-            <label className="text-xs text-gray-500">Start Date</label>
-            <input
-              type="date"
-              name="startDate"
-              value={filters.startDate}
-              onChange={handleChange}
-              className="w-full border px-3 py-2 rounded-lg mt-1"
-            />
-          </div>
+          <DatePicker
+            label="From"
+            value={filters.startDate}
+            onChange={(startDate) =>
+              setFilters({ ...filters, startDate })
+            }
+          />
 
-          {/* End Date */}
-          <div>
-            <label className="text-xs text-gray-500">End Date</label>
-            <input
-              type="date"
-              name="endDate"
-              value={filters.endDate}
-              onChange={handleChange}
-              className="w-full border px-3 py-2 rounded-lg mt-1"
-            />
-          </div>
+          <DatePicker
+            label="To"
+            value={filters.endDate}
+            onChange={(endDate) =>
+              setFilters({ ...filters, endDate })
+            }
+            minDate={filters.startDate}
+          />
 
           {/* Status */}
           <div>
-            <label className="text-xs text-gray-500">Status</label>
+            <label className="text-xs font-medium text-gray-500 mb-1 block">Status</label>
             <select
               name="slotStatus"
               value={filters.slotStatus}
               onChange={handleChange}
-              className="w-full border px-3 py-2 rounded-lg mt-1"
+              className="w-full border border-gray-200 px-3 py-2.5 rounded-xl shadow-sm bg-white"
             >
               <option value="">All</option>
               <option value="AVAILABLE">AVAILABLE</option>
@@ -158,7 +153,7 @@ export default function DoctorSlots() {
                 });
                 fetchSlots(0);
               }}
-              className="w-full bg-gray-200 py-2 rounded-lg hover:bg-gray-300"
+              className="w-full bg-gray-100 text-gray-700 py-2.5 rounded-xl hover:bg-gray-200 transition"
             >
               Reset
             </button>
@@ -195,9 +190,9 @@ export default function DoctorSlots() {
                 slots.map((slot) => (
                   <tr key={slot.slotId} className="border-t hover:bg-gray-50">
                     <td className="px-3 py-2">{slot.slotId}</td>
-                    <td className="px-3 py-2">{slot.date}</td>
-                    <td className="px-3 py-2">{slot.startTime}</td>
-                    <td className="px-3 py-2">{slot.endTime}</td>
+                    <td className="px-3 py-2">{formatDisplayDate(slot.date)}</td>
+                    <td className="px-3 py-2">{formatTime(slot.startTime)}</td>
+                    <td className="px-3 py-2">{formatTime(slot.endTime)}</td>
                     <td className="px-3 py-2">₹{slot.fee}</td>
 
                     <td className="px-3 py-2">

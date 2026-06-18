@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react";
 import { SlotAPI } from "../../api/SlotAPI";
 import { DoctorAPI } from "../../api/DoctorApi";
 import { toast } from "react-toastify";
+import DatePicker from "../../components/DatePicker";
+import { formatDisplayDate, formatTime } from "../../utils/helper";
 
 export default function SlotsPage() {
   const [slots, setSlots] = useState([]);
@@ -99,8 +101,8 @@ export default function SlotsPage() {
 
       {/* FILTERS */}
    {/* 🔍 FILTER CARD */}
-<div className="bg-white p-4 rounded-xl shadow-sm mb-6">
-
+<div className="bg-white p-5 rounded-xl shadow-sm mb-6">
+  <h3 className="text-sm font-semibold text-gray-700 mb-4">Filter slots</h3>
   <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
 
     {/* Doctor */}
@@ -138,44 +140,35 @@ export default function SlotsPage() {
       )}
     </div>
 
-    {/* Start Date */}
-    <div>
-      <label className="text-xs text-gray-500 mb-1 block">Start Date</label>
-      <input
-        type="date"
-        value={startDate}
-        onChange={(e) => {
-          setStartDate(e.target.value);
-          setPage(0);
-        }}
-        className="w-full px-3 py-2 border rounded-lg"
-      />
-    </div>
+    <DatePicker
+      label="From"
+      value={startDate}
+      onChange={(value) => {
+        setStartDate(value);
+        setPage(0);
+      }}
+    />
 
-    {/* End Date */}
-    <div>
-      <label className="text-xs text-gray-500 mb-1 block">End Date</label>
-      <input
-        type="date"
-        value={endDate}
-        onChange={(e) => {
-          setEndDate(e.target.value);
-          setPage(0);
-        }}
-        className="w-full px-3 py-2 border rounded-lg"
-      />
-    </div>
+    <DatePicker
+      label="To"
+      value={endDate}
+      onChange={(value) => {
+        setEndDate(value);
+        setPage(0);
+      }}
+      minDate={startDate}
+    />
 
     {/* Status */}
     <div>
-      <label className="text-xs text-gray-500 mb-1 block">Status</label>
+      <label className="text-xs font-medium text-gray-500 mb-1 block">Status</label>
       <select
         value={slotStatus}
         onChange={(e) => {
           setSlotStatus(e.target.value);
           setPage(0);
         }}
-        className="w-full px-3 py-2 border rounded-lg"
+        className="w-full px-3 py-2.5 border border-gray-200 rounded-xl shadow-sm bg-white"
       >
         <option value="">All</option>
         <option value="AVAILABLE">Available</option>
@@ -195,7 +188,7 @@ export default function SlotsPage() {
           setSlotStatus("");
           setPage(0);
         }}
-        className="w-full px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300"
+        className="w-full px-4 py-2.5 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition"
       >
         Clear
       </button>
@@ -235,9 +228,9 @@ export default function SlotsPage() {
                   <tr key={slot.slotId} className="border-t">
                     <td className="px-3 py-2">{slot.slotId}</td>
                     <td className="px-3 py-2">{slot.doctorName}</td>
-                    <td className="px-3 py-2">{slot.date}</td>
-                    <td className="px-3 py-2">{slot.startTime}</td>
-                    <td className="px-3 py-2">{slot.endTime}</td>
+                    <td className="px-3 py-2">{formatDisplayDate(slot.date)}</td>
+                    <td className="px-3 py-2">{formatTime(slot.startTime)}</td>
+                    <td className="px-3 py-2">{formatTime(slot.endTime)}</td>
                     <td className="px-3 py-2">₹{slot.fee}</td>
 
                     <td className="px-3 py-2">

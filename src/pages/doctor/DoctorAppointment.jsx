@@ -2,7 +2,8 @@ import React, { useEffect, useState } from "react";
 import { AppointmentAPI } from "../../api/AppointmentApi";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
-import { formatDate, formatTime } from "../../utils/helper";
+import DatePicker from "../../components/DatePicker";
+import { formatDisplayDate, formatTime } from "../../utils/helper";
 
 export default function DoctorAppointment() {
   const [appointments, setAppointments] = useState([]);
@@ -125,38 +126,29 @@ export default function DoctorAppointment() {
             />
           </div>
 
-          {/* Start Date */}
-          <div className="flex flex-col">
-            <label className="text-xs text-gray-500 mb-1">Start Date</label>
-            <input
-              type="date"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-              className="border px-3 py-2 rounded-lg focus:ring-2 focus:ring-blue-400 outline-none"
-            />
-          </div>
+          <DatePicker
+            label="From"
+            value={startDate}
+            onChange={setStartDate}
+          />
 
-          {/* End Date */}
-          <div className="flex flex-col">
-            <label className="text-xs text-gray-500 mb-1">End Date</label>
-            <input
-              type="date"
-              value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
-              className="border px-3 py-2 rounded-lg focus:ring-2 focus:ring-blue-400 outline-none"
-            />
-          </div>
+          <DatePicker
+            label="To"
+            value={endDate}
+            onChange={setEndDate}
+            minDate={startDate}
+          />
 
           {/* Status */}
           <div className="flex flex-col">
-            <label className="text-xs text-gray-500 mb-1">Status</label>
+            <label className="text-xs font-medium text-gray-500 mb-1">Status</label>
             <select
               value={appointmentStatus}
               onChange={(e) => {
                 setAppointmentStatus(e.target.value);
                 setPage(0);
               }}
-              className="border px-3 py-2 rounded-lg focus:ring-2 focus:ring-blue-400 outline-none"
+              className="w-full border border-gray-200 px-3 py-2.5 rounded-xl shadow-sm bg-white"
             >
               <option value="">All</option>
               {AllStatuses.map((status) => (
@@ -177,7 +169,7 @@ export default function DoctorAppointment() {
                 setAppointmentStatus("");
                 setPage(0);
               }}
-              className="w-full bg-gray-200 text-gray-700 py-2 rounded-lg hover:bg-gray-300 transition"
+              className="w-full bg-gray-100 text-gray-700 py-2.5 rounded-xl hover:bg-gray-200 transition"
             >
               Reset
             </button>
@@ -218,9 +210,9 @@ export default function DoctorAppointment() {
                     className="border-t hover:bg-gray-50 transition"
                   >
                     <td className="px-4 py-3">{appt.id}</td>
-                    <td className="px-4 py-3">{formatDate(appt.date)}</td>
+                    <td className="px-4 py-3">{formatDisplayDate(appt.date)}</td>
                     <td className="px-4 py-3">
-                      {formatTime(appt.startTime)} - {formatTime(appt.endTime)}
+                      {formatTime(appt.startTime)} – {formatTime(appt.endTime)}
                     </td>
 
                     <td className="px-4 py-3">
@@ -250,9 +242,10 @@ export default function DoctorAppointment() {
                       >
                         Prescription
                       </button>
-
+                      
                       {/* Edit */}
                       <button
+                        disabled={appt.status === "COMPLETED" || appt.status === "CANCELLED"}
                         onClick={() => handleEdit(appt)}
                         className="px-3 py-1 rounded-lg text-xs text-white bg-yellow-500 hover:bg-yellow-600"
                       >

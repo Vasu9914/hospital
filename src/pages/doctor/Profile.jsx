@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react";
 import { DoctorAPI } from "../../api/DoctorApi.js";
 import {UserAPI} from "../../api/UserApi.js";
 import { toast } from "react-toastify";
+import DatePicker from "../../components/DatePicker";
+import { formatDisplayDate } from "../../utils/helper";
 
 export const Profile = () => {
   const [doctor, setDoctor] = useState(null);
@@ -224,15 +226,14 @@ export const Profile = () => {
           <p>
             <strong>Date of Birth:</strong>{" "}
             {isEditing ? (
-              <input
-                type="date"
-                name="dateOfBirth"
+              <DatePicker
                 value={formData.dateOfBirth?.split("T")[0] || ""}
-                onChange={handleChange}
-                className="border p-1 rounded"
+                onChange={(dateOfBirth) =>
+                  setFormData({ ...formData, dateOfBirth })
+                }
               />
             ) : (
-              doctor.dateOfBirth?.split("T")[0]
+              formatDisplayDate(doctor.dateOfBirth, "long")
             )}
           </p>
 

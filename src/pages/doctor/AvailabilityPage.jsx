@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { AvailabilityAPI } from "../../api/AvailabilityApi";
 import { toast } from "react-toastify";
+import DatePicker from "../../components/DatePicker";
+import { formatDisplayDate, formatTime } from "../../utils/helper";
 
 export default function AvailabilityPage() {
   const [data, setData] = useState([]);
@@ -108,33 +110,57 @@ export default function AvailabilityPage() {
         </div>
 
         {/* FILTERS */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <input
-            type="date"
-            name="startDate"
-            value={filters.startDate}
-            onChange={handleFilterChange}
-            className="border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500"
-          />
+        <div className="bg-gray-50 border border-gray-100 rounded-xl p-4 mb-6">
+          <h3 className="text-sm font-semibold text-gray-700 mb-4">Filter availability</h3>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <DatePicker
+              label="From"
+              value={filters.startDate}
+              onChange={(startDate) =>
+                setFilters({ ...filters, startDate })
+              }
+            />
 
-          <input
-            type="date"
-            name="endDate"
-            value={filters.endDate}
-            onChange={handleFilterChange}
-            className="border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500"
-          />
+            <DatePicker
+              label="To"
+              value={filters.endDate}
+              onChange={(endDate) =>
+                setFilters({ ...filters, endDate })
+              }
+              minDate={filters.startDate}
+            />
 
-          <select
-            name="availabilityStatus"
-            value={filters.availabilityStatus}
-            onChange={handleFilterChange}
-            className="border rounded-lg px-3 py-2"
-          >
-            <option value="">All Status</option>
-            <option value="ACTIVE">ACTIVE</option>
-            <option value="INACTIVE">INACTIVE</option>
-          </select>
+            <div>
+              <label className="block text-xs font-medium text-gray-500 mb-1">Status</label>
+              <select
+                name="availabilityStatus"
+                value={filters.availabilityStatus}
+                onChange={handleFilterChange}
+                className="w-full border border-gray-200 px-3 py-2.5 rounded-xl shadow-sm bg-white"
+              >
+                <option value="">All Status</option>
+                <option value="ACTIVE">ACTIVE</option>
+                <option value="INACTIVE">INACTIVE</option>
+              </select>
+            </div>
+
+            <div className="flex items-end">
+              <button
+                type="button"
+                onClick={() =>
+                  setFilters({
+                    doctorId: filters.doctorId,
+                    startDate: "",
+                    endDate: "",
+                    availabilityStatus: "",
+                  })
+                }
+                className="w-full bg-gray-100 text-gray-700 py-2.5 rounded-xl hover:bg-gray-200 transition"
+              >
+                Reset
+              </button>
+            </div>
+          </div>
         </div>
 
         {/* TABLE */}
@@ -165,9 +191,9 @@ export default function AvailabilityPage() {
                   data.map((item) => (
                     <tr key={item.id} className="border-t hover:bg-gray-50">
                       <td className="p-3">{item.id}</td>
-                      <td className="p-3">{item.date}</td>
-                      <td className="p-3">{item.startTime}</td>
-                      <td className="p-3">{item.endTime}</td>
+                      <td className="p-3">{formatDisplayDate(item.date)}</td>
+                      <td className="p-3">{formatTime(item.startTime)}</td>
+                      <td className="p-3">{formatTime(item.endTime)}</td>
 
                       <td className="p-3">
                         <span
@@ -308,14 +334,10 @@ function AddAvailabilityForm({ onClose }) {
       <form onSubmit={handleSubmit} className="space-y-4">
 
         <div>
-          <label className="text-sm font-medium">Date</label>
-          <input
-            type="date"
-            name="date"
+          <DatePicker
+            label="Date"
             value={form.date}
-            onChange={handleChange}
-            className="w-full border px-3 py-2 rounded-lg mt-1"
-            required
+            onChange={(date) => setForm({ ...form, date })}
           />
         </div>
 

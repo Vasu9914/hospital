@@ -3,6 +3,8 @@ import { useParams, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { SlotAPI } from "../../api/SlotApi";
 import { AppointmentAPI } from "../../api/AppointmentApi";
+import DatePicker from "../../components/DatePicker";
+import { formatDisplayDate, formatTime } from "../../utils/helper";
 
 export default function SlotsPage() {
   const { doctorId } = useParams();
@@ -62,6 +64,7 @@ export default function SlotsPage() {
     }
 
     try {
+      const appointmentId =
       await AppointmentAPI.book({
         doctorId: selectedSlot.doctorId,
         patientId: 2,
@@ -79,7 +82,7 @@ export default function SlotsPage() {
 
       getSlots(page);
 
-      navigate("/patient/appointments");
+      navigate("/patient/appointment/" + selectedSlot.doctorId);
     } catch {
       toast.error("Booking failed");
     }
@@ -97,7 +100,7 @@ export default function SlotsPage() {
           </h1>
 
           <button
-            onClick={() => navigate("/patient/appointments")}
+            onClick={() => navigate("/patient/appointment/"+doctorId)}
             className="bg-blue-600 text-white px-4 py-2 rounded-lg"
           >
             My Appointments
@@ -105,36 +108,40 @@ export default function SlotsPage() {
         </div>
 
         {/* FILTER CARD */}
-        <div className="bg-white p-4 rounded-xl shadow mb-6">
-          <div className="grid md:grid-cols-3 gap-3">
+        <div className="bg-white p-5 rounded-xl shadow mb-6">
+          <h3 className="text-sm font-semibold text-gray-700 mb-4">
+            Filter by date
+          </h3>
+          <div className="grid md:grid-cols-3 gap-4">
 
-            <input
-              type="date"
+            <DatePicker
+              label="From"
               value={filters.startDate}
-              onChange={(e) =>
-                setFilters({ ...filters, startDate: e.target.value })
+              onChange={(startDate) =>
+                setFilters({ ...filters, startDate })
               }
-              className="border p-2 rounded-lg"
             />
 
-            <input
-              type="date"
+            <DatePicker
+              label="To"
               value={filters.endDate}
-              onChange={(e) =>
-                setFilters({ ...filters, endDate: e.target.value })
+              onChange={(endDate) =>
+                setFilters({ ...filters, endDate })
               }
-              className="border p-2 rounded-lg"
+              minDate={filters.startDate}
             />
 
-            <button
-              onClick={() => {
-                setFilters({ startDate: "", endDate: "" });
-                getSlots(0);
-              }}
-              className="bg-gray-200 rounded-lg"
-            >
-              Reset
-            </button>
+            <div className="flex items-end">
+              <button
+                onClick={() => {
+                  setFilters({ startDate: "", endDate: "" });
+                  getSlots(0);
+                }}
+                className="w-full bg-gray-100 text-gray-700 py-2.5 rounded-xl hover:bg-gray-200 transition"
+              >
+                Reset
+              </button>
+            </div>
 
           </div>
         </div>
@@ -147,14 +154,24 @@ export default function SlotsPage() {
           {slots.map((slot) => (
             <div
               key={slot.slotId}
-              className="bg-white p-5 rounded-xl shadow hover:shadow-lg transition"
+              className="bg-white p-5 rounded-xl shadow hover:shadow-lg transition border border-gray-100"
             >
-              <p className="font-semibold text-gray-800">
-                {slot.date}
-              </p>
+              <div className="flex items-start justify-between gap-3 mb-3">
+                <div>
+                  <p className="text-xs font-medium uppercase tracking-wide text-blue-600">
+                    {formatDisplayDate(slot.date, "short")}
+                  </p>
+                  <p className="font-semibold text-gray-800 mt-1">
+                    {formatDisplayDate(slot.date, "long")}
+                  </p>
+                </div>
+                <span className="rounded-full bg-green-100 px-2.5 py-1 text-xs font-medium text-green-700">
+                  Available
+                </span>
+              </div>
 
               <p className="text-sm text-gray-600">
-                {slot.startTime} - {slot.endTime}
+                {formatTime(slot.startTime)} – {formatTime(slot.endTime)}
               </p>
 
               <p className="mt-2 font-medium text-blue-600">
@@ -209,7 +226,8 @@ export default function SlotsPage() {
             </h2>
 
             <p className="text-sm text-gray-500 mb-3">
-              {selectedSlot?.date} | {selectedSlot?.startTime} - {selectedSlot?.endTime}
+              {formatDisplayDate(selectedSlot?.date, "long")} ·{" "}
+              {formatTime(selectedSlot?.startTime)} – {formatTime(selectedSlot?.endTime)}
             </p>
 
             <input

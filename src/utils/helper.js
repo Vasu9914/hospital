@@ -1,12 +1,61 @@
 const pad = (value) => String(value).padStart(2, "0");
 
-export const formatDate = (date) => {
-  if (!date) return "";
+const parseDate = (date) => {
+  if (!date) return null;
 
-  const value = date instanceof Date ? date : new Date(date);
-  if (Number.isNaN(value.getTime())) return String(date);
+  if (date instanceof Date) {
+    return Number.isNaN(date.getTime()) ? null : date;
+  }
+
+  const normalized = String(date).trim();
+  const isoMatch = normalized.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (isoMatch) {
+    const parsed = new Date(
+      Number(isoMatch[1]),
+      Number(isoMatch[2]) - 1,
+      Number(isoMatch[3])
+    );
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
+  }
+
+  const parsed = new Date(normalized);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+};
+
+export const formatDate = (date) => {
+  const value = parseDate(date);
+  if (!value) return date ? String(date) : "";
 
   return `${value.getFullYear()}-${pad(value.getMonth() + 1)}-${pad(value.getDate())}`;
+};
+
+export const formatDisplayDate = (date, style = "medium") => {
+  const value = parseDate(date);
+  if (!value) return date ? String(date) : "";
+
+  if (style === "long") {
+    return value.toLocaleDateString("en-IN", {
+      weekday: "long",
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    });
+  }
+
+  if (style === "short") {
+    return value.toLocaleDateString("en-IN", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    });
+  }
+
+  return value.toLocaleDateString("en-IN", {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
 };
 
 export const formatTime = (time) => {

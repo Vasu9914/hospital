@@ -1,4 +1,4 @@
-import { useState,useEffect } from 'react';
+import { useState,useEffect, } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { saveToken, getRole } from '../utils/auth';
 import { AuthAPI } from '../api/authApi';
@@ -82,6 +82,28 @@ export default function Login() {
         <div className="text-center mt-4 text-sm text-gray-500">
           <p className="cursor-pointer hover:text-blue-600">
             Forgot password?
+          </p>
+        </div>
+        <div>
+          <p className="text-center mt-2 text-sm text-gray-500">
+            verify your email?{" "}
+            <span
+              onClick={() => navigate('/auth/verify-email')}
+              className="cursor-pointer text-blue-600 hover:underline"
+            >
+              Click here
+            </span>
+          </p>
+        </div>
+        <div>
+          <p className="text-center mt-2 text-sm text-gray-500">
+            Don't have an account?{" "}
+            <span
+              onClick={() => navigate('/auth/register')}
+              className="cursor-pointer text-blue-600 hover:underline"
+            >
+              Register here
+            </span>
           </p>
         </div>
 

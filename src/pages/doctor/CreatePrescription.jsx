@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { PrescriptionAPI } from "../../api/PrescriptionAPI";
 import PrescriptionForm from "../../components/PrescriptionForm";
 import { toast } from "react-toastify";
-import { formatDate, formatTime } from "../../utils/helper";
+import { formatDate, formatDisplayDate, formatTime } from "../../utils/helper";
 
 export default function CreatePrescription() {
   const { state } = useLocation();
@@ -103,9 +103,9 @@ export default function CreatePrescription() {
           </p>
 
           <div className="mt-6 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-            <InfoChip label="Prescription Date" value={today} />
-            <InfoChip label="Appointment Date" value={formatDate(appointmentDate)} />
-            <InfoChip label="Time" value={`${formatTime(startTime)} - ${formatTime(endTime)}`} />
+            <InfoChip label="Prescription Date" value={formatDisplayDate(today)} />
+            <InfoChip label="Appointment Date" value={formatDisplayDate(appointmentDate)} />
+            <InfoChip label="Time" value={`${formatTime(startTime)} – ${formatTime(endTime)}`} />
             <InfoChip label="Patient" value={patientName || patientId || "N/A"} />
             <InfoChip label="Doctor" value={doctorName || doctorId || "N/A"} />
             <InfoChip label="Reason" value={reason || "N/A"} />
