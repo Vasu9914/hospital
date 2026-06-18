@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { AuthAPI } from "../api/AuthApi.js";
+import { AuthAPI } from "../api/AuthApi";
 import { toast } from "react-toastify";
 
 const ResetPassword = () => {

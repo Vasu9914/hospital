@@ -1,5 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { getRole, removeToken } from '../utils/auth.js';
+import { getRole, removeToken } from '../utils/auth';
 
 const navItemsByRole = {
   PATIENT: [

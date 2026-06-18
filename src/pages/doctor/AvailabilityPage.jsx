@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
-import { AvailabilityAPI } from "../../api/AvailabilityApi.js";
+import { AvailabilityAPI } from "../../api/AvailabilityApi";
 import { toast } from "react-toastify";
-import DatePicker from "../../components/DatePicker.jsx";
-import { formatDisplayDate, formatTime } from "../../utils/helper.js";
+import DatePicker from "../../components/DatePicker";
+import { formatDisplayDate, formatTime } from "../../utils/helper";
 
 export default function AvailabilityPage() {
   const [data, setData] = useState([]);

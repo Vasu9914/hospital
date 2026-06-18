@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { AdminAPI } from "../../api/AdminApi.js";
-import DatePicker from "../../components/DatePicker.jsx";
+import { AdminAPI } from "../../api/AdminApi";
+import DatePicker from "../../components/DatePicker";
 
 const SPECIALIZATIONS = [
   "cardiology", "dermatology", "neurology",

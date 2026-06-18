@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
-import { AppointmentAPI } from "../../api/AppointmentApi.js";
+import { AppointmentAPI } from "../../api/AppointmentApi";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
-import DatePicker from "../../components/DatePicker.jsx";
-import { formatDisplayDate, formatTime } from "../../utils/helper.js";
+import DatePicker from "../../components/DatePicker";
+import { formatDisplayDate, formatTime } from "../../utils/helper";
 
 export default function DoctorAppointment() {
   const [appointments, setAppointments] = useState([]);

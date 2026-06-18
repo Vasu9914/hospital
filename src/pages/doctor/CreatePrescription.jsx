@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { PrescriptionAPI } from "../../api/PrescriptionAPI.js";
-import PrescriptionForm from "../../components/PrescriptionForm.jsx";
+import { PrescriptionAPI } from "../../api/PrescriptionAPI";
+import PrescriptionForm from "../../components/PrescriptionForm";
 import { toast } from "react-toastify";
-import { formatDate, formatDisplayDate, formatTime } from "../../utils/helper.js";
+import { formatDate, formatDisplayDate, formatTime } from "../../utils/helper";
 
 export default function CreatePrescription() {
   const { state } = useLocation();

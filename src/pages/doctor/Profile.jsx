@@ -2,8 +2,8 @@ import React, { useEffect, useState } from "react";
 import { DoctorAPI } from "../../api/DoctorApi.js";
 import {UserAPI} from "../../api/UserApi.js";
 import { toast } from "react-toastify";
-import DatePicker from "../../components/DatePicker.jsx";
-import { formatDisplayDate } from "../../utils/helper.js";
+import DatePicker from "../../components/DatePicker";
+import { formatDisplayDate } from "../../utils/helper";
 
 
 export const Profile = () => {
