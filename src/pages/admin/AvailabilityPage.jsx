@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { AvailabilityAPI } from "../../api/AvailabilityApi.js";
-import { SlotAPI } from "../../api/SlotApi.js";
-import { formatTime, formatDisplayDate } from "../../utils/helper.js";
+import { AvailabilityAPI } from "../../api/AvailabilityApi";
+import { SlotAPI } from "../../api/SlotApi";
+import { formatTime, formatDisplayDate } from "../../utils/helper";
 import DatePicker from "../../components/DatePicker";
 
 // ✅ Status badge

@@ -1,3 +1,4 @@
+import { UNSAFE_getTurboStreamSingleFetchDataStrategy } from 'react-router-dom';
 import API from './axios';
 
 export const PrescriptionAPI = {

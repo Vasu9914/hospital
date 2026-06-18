@@ -2,10 +2,10 @@ import React from 'react'
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { AdminAPI } from '../../api/AdminApi.js';
-import { AppointmentAPI } from '../../api/AppointmentApi.js';
-import DatePicker from '../../components/DatePicker.jsx';
-import { formatDisplayDate, formatTime } from '../../utils/helper.js';
+import { AdminAPI } from '../../api/AdminApi';
+import { AppointmentAPI } from '../../api/AppointmentApi';
+import DatePicker from '../../components/DatePicker';
+import { formatDisplayDate, formatTime } from '../../utils/helper';
 
 
 export const Dashboard = () => {

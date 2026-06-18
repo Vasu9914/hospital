@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { DoctorAPI } from "../../api/DoctorApi.js";
+import { DoctorAPI } from "../../api/DoctorApi";
 
 export const Dashboard = () => {
   const [doctors, setDoctors] = useState([]);

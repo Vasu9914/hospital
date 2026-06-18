@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { AppointmentAPI } from "../../api/AppointmentApi.js";
-import { PrescriptionAPI } from "../../api/PrescriptionApi.js";
-import DatePicker from "../../components/DatePicker.jsx";
-import { formatDisplayDate, formatTime } from "../../utils/helper.js";
+import { AppointmentAPI } from "../../api/AppointmentApi";
+import { PrescriptionAPI } from "../../api/PrescriptionApi";
+import DatePicker from "../../components/DatePicker";
+import { formatDisplayDate, formatTime } from "../../utils/helper";
 
 export default function Appointment() {
   const { doctorId } = useParams();

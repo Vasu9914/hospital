@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
-import { SlotAPI } from "../../api/SlotApi.js";
+import { SlotAPI } from "../../api/SlotAPI";
 import { toast } from "react-toastify";
 import DatePicker from "../../components/DatePicker";
-import { formatDisplayDate, formatTime } from "../../utils/helper.js";
+import { formatDisplayDate, formatTime } from "../../utils/helper";
 
 export default function DoctorSlots() {
   const [slots, setSlots] = useState([]);

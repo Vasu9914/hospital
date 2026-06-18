@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { AdminAPI } from "../../api/AdminApi.js";
-import { UserAPI } from "../../api/UserApi.js";
+import { AdminAPI } from "../../api/AdminApi";
+import { UserAPI } from "../../api/UserApi";
 import { toast } from "react-toastify";
 import DatePicker from "../../components/DatePicker";
 

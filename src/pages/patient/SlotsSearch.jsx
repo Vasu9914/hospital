@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import { SlotAPI } from "../../api/SlotApi.js";
-import { AppointmentAPI } from "../../api/AppointmentApi.js";
-import DatePicker from "../../components/DatePicker.jsx";
-import { formatDisplayDate, formatTime } from "../../utils/helper.js";
+import { SlotAPI } from "../../api/SlotApi";
+import { AppointmentAPI } from "../../api/AppointmentApi";
+import DatePicker from "../../components/DatePicker";
+import { formatDisplayDate, formatTime } from "../../utils/helper";
 
 export default function SlotsPage() {
   const { doctorId } = useParams();
