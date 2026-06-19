@@ -20,7 +20,7 @@ import AppointmentsPage from './pages/admin/AppointmentsPage';
 import AddDoctorPage from './pages/admin/AddDoctorPage';
 import DoctorsPage from './pages/admin/DoctorsPage';
 import SlotsPage from './pages/admin/SlotsPage';
-import ForgetPassword from './pages/Forgetpassword';
+import ForgetPassword from './pages/ForgetPassword';
 import ResetPassword from './pages/ResetPassword';
 import EmailVerify from './pages/EmailVerify';
 import VerifyTokenPage from './pages/VerifyTokenPage';

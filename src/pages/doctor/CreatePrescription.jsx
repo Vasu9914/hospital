@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { PrescriptionAPI } from "../../api/PrescriptionApi";
+import { PrescriptionAPI } from "../../api/PrescriptionAPI";
 import PrescriptionForm from "../../components/PrescriptionForm";
 import { toast } from "react-toastify";
 import { formatDate, formatDisplayDate, formatTime } from "../../utils/helper";

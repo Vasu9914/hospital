@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import {AuthAPI} from "../api/AuthApi";
+import { AuthAPI } from "../api/AuthApi";
 import { toast } from "react-toastify";
 
 const VerifyTokenPage = () => {
