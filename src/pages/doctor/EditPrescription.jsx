@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { PrescriptionAPI } from "../../api/PrescriptionAPI";
+import { PrescriptionAPI } from "../../api/PrescriptionApi";
 import PrescriptionForm from "../../components/PrescriptionForm";
 import { toast } from "react-toastify";
 
