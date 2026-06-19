@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { SlotAPI } from "../../api/SlotAPI";
+import { SlotAPI } from "../../api/SlotApi";
 import { DoctorAPI } from "../../api/DoctorApi";
 import { toast } from "react-toastify";
 import DatePicker from "../../components/DatePicker";
