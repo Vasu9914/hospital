@@ -26,6 +26,24 @@ const slotColors = {
   CANCELLED: "bg-red-500 text-white",
 };
 
+// ================= HELPER =================
+function generateTimeOptions(stepMinutes) {
+  const times = [];
+  for (let h = 0; h < 24; h++) {
+    for (let m = 0; m < 60; m += stepMinutes) {
+      const hh = String(h).padStart(2, "0");
+      const mm = String(m).padStart(2, "0");
+      const suffix = h < 12 ? "AM" : "PM";
+      const displayH = h % 12 === 0 ? 12 : h % 12;
+      times.push({
+        value: `${hh}:${mm}`,
+        label: `${displayH}:${mm} ${suffix}`,
+      });
+    }
+  }
+  return times;
+}
+
 export function AvailabilityPage() {
   const navigate = useNavigate();
   const { doctorId } = useParams();
@@ -47,12 +65,22 @@ export function AvailabilityPage() {
     availabilityStatus: "",
   });
 
-  // 🔥 ADD MODAL STATE
+  // ADD MODAL STATE
   const [showAddModal, setShowAddModal] = useState(false);
   const [form, setForm] = useState({
     date: "",
     startTime: "",
     endTime: "",
+    duration: 30,
+  });
+
+  // Generate time slots based on selected duration
+  const timeOptions = generateTimeOptions(Number(form.duration));
+
+  // End time options: only show times after the selected start time
+  const endTimeOptions = timeOptions.filter((t) => {
+    if (!form.startTime) return true;
+    return t.value > form.startTime;
   });
 
   // ---------------- FETCH ----------------
@@ -115,16 +143,32 @@ export function AvailabilityPage() {
     }
   };
 
-  // ---------------- ADD AVAILABILITY ----------------
+  // ---------------- FORM CHANGE ----------------
   const handleFormChange = (e) => {
-    setForm({
-      ...form,
-      [e.target.name]: e.target.value,
+    const { name, value } = e.target;
+
+    setForm((prev) => {
+      const updated = { ...prev, [name]: value };
+
+      // When duration changes, reset start & end time
+      // so stale values from previous step size don't remain
+      if (name === "duration") {
+        updated.startTime = "";
+        updated.endTime = "";
+      }
+
+      // When start time changes, clear end time if it's no longer valid
+      if (name === "startTime" && prev.endTime && value >= prev.endTime) {
+        updated.endTime = "";
+      }
+
+      return updated;
     });
   };
 
+  // ---------------- ADD AVAILABILITY ----------------
   const handleAddAvailability = async () => {
-    if (!form.date || !form.startTime || !form.endTime) {
+    if (!form.date || !form.startTime || !form.endTime || !form.duration) {
       alert("All fields required");
       return;
     }
@@ -137,17 +181,14 @@ export function AvailabilityPage() {
     try {
       await AvailabilityAPI.add({
         doctorId,
-        ...form,
+        date: form.date,
+        startTime: form.startTime,
+        endTime: form.endTime,
+        duration: Number(form.duration),
       });
 
-      setForm({
-        date: "",
-        startTime: "",
-        endTime: "",
-      });
-
+      setForm({ date: "", startTime: "", endTime: "", duration: 30 });
       setShowAddModal(false);
-
       fetchAvailability(0);
     } catch (err) {
       console.error(err);
@@ -168,7 +209,7 @@ export function AvailabilityPage() {
           Doctor Availability (ID: {doctorId})
         </h2>
 
-       <button
+        <button
           onClick={() => setShowAddModal(true)}
           className="px-4 py-2 bg-green-600 text-white rounded"
         >
@@ -289,38 +330,100 @@ export function AvailabilityPage() {
         </table>
       </div>
 
-      {/* 🔥 ADD MODAL */}
+      {/* ADD MODAL */}
       {showAddModal && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center">
-
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded-lg w-[400px]">
 
-            <h3 className="text-lg font-semibold mb-4">
-              Add Availability
-            </h3>
+            <h3 className="text-lg font-semibold mb-4">Add Availability</h3>
 
             <div className="space-y-3">
 
+              {/* Date */}
               <DatePicker
                 label="Date"
                 value={form.date}
                 onChange={(date) => setForm({ ...form, date })}
               />
 
-              <input type="time" name="startTime" value={form.startTime}
-                onChange={handleFormChange} className="w-full border p-2 rounded" />
+              {/* Duration — pick this first, drives the time dropdowns */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Duration (minutes)
+                </label>
+                <select
+                  name="duration"
+                  value={form.duration}
+                  onChange={handleFormChange}
+                  className="w-full border px-3 py-2 rounded"
+                >
+                  <option value="">Select duration</option>
+                  <option value={15}>15</option>
+                  <option value={30}>30</option>
+                  <option value={45}>45</option>
+                  <option value={60}>60</option>
+                </select>
+              </div>
 
-              <input type="time" name="endTime" value={form.endTime}
-                onChange={handleFormChange} className="w-full border p-2 rounded" />
+              {/* Start Time */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Start Time
+                </label>
+                <select
+                  name="startTime"
+                  value={form.startTime}
+                  onChange={handleFormChange}
+                  className="w-full border px-3 py-2 rounded"
+                  disabled={!form.duration}
+                >
+                  <option value="">Select start time</option>
+                  {timeOptions.map((t) => (
+                    <option key={t.value} value={t.value}>
+                      {t.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* End Time */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  End Time
+                </label>
+                <select
+                  name="endTime"
+                  value={form.endTime}
+                  onChange={handleFormChange}
+                  className="w-full border px-3 py-2 rounded"
+                  disabled={!form.startTime}
+                >
+                  <option value="">Select end time</option>
+                  {endTimeOptions.map((t) => (
+                    <option key={t.value} value={t.value}>
+                      {t.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
             </div>
 
             <div className="flex justify-end gap-2 mt-4">
-              <button onClick={() => setShowAddModal(false)} className="px-3 py-1 bg-gray-200 rounded">
+              <button
+                onClick={() => {
+                  setShowAddModal(false);
+                  setForm({ date: "", startTime: "", endTime: "", duration: 30 });
+                }}
+                className="px-3 py-1 bg-gray-200 rounded"
+              >
                 Cancel
               </button>
 
-              <button onClick={handleAddAvailability} className="px-3 py-1 bg-green-600 text-white rounded">
+              <button
+                onClick={handleAddAvailability}
+                className="px-3 py-1 bg-green-600 text-white rounded"
+              >
                 Save
               </button>
             </div>

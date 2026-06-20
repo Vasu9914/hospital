@@ -1,11 +1,41 @@
 import React, { useEffect, useState } from "react";
 import { AvailabilityAPI } from "../../api/AvailabilityApi";
+import { SlotAPI } from "../../api/SlotApi";
 import { toast } from "react-toastify";
 import DatePicker from "../../components/DatePicker";
 import { formatDisplayDate, formatTime } from "../../utils/helper";
 
+// ================= HELPER =================
+function generateTimeOptions(stepMinutes) {
+  const times = [];
+  for (let h = 0; h < 24; h++) {
+    for (let m = 0; m < 60; m += stepMinutes) {
+      const hh = String(h).padStart(2, "0");
+      const mm = String(m).padStart(2, "0");
+      const suffix = h < 12 ? "AM" : "PM";
+      const displayH = h % 12 === 0 ? 12 : h % 12;
+      times.push({
+        value: `${hh}:${mm}`,
+        label: `${displayH}:${mm} ${suffix}`,
+      });
+    }
+  }
+  return times;
+}
+
+// ================= SLOT COLORS =================
+const slotColors = {
+  AVAILABLE: "bg-green-500 text-white",
+  BOOKED: "bg-blue-500 text-white",
+  CANCELLED: "bg-red-500 text-white",
+};
+
 export default function AvailabilityPage() {
   const [data, setData] = useState([]);
+
+  // Slots state
+  const [slotsMap, setSlotsMap] = useState({});
+  const [loadingSlots, setLoadingSlots] = useState({});
 
   const [pageInfo, setPageInfo] = useState({
     page: 0,
@@ -23,7 +53,7 @@ export default function AvailabilityPage() {
 
   const [loading, setLoading] = useState(false);
 
-  // ✅ Modal state
+  // Modal state
   const [showModal, setShowModal] = useState(false);
 
   // ================= FETCH =================
@@ -54,6 +84,30 @@ export default function AvailabilityPage() {
       toast.error("Failed to fetch availability");
     } finally {
       setLoading(false);
+    }
+  };
+
+  // ================= FETCH SLOTS =================
+  const fetchSlots = async (availabilityId) => {
+    // Toggle: if already loaded, hide them
+    if (slotsMap[availabilityId]) {
+      setSlotsMap((prev) => {
+        const next = { ...prev };
+        delete next[availabilityId];
+        return next;
+      });
+      return;
+    }
+
+    try {
+      setLoadingSlots((prev) => ({ ...prev, [availabilityId]: true }));
+      const res = await SlotAPI.getslotsbyavailability(availabilityId);
+      setSlotsMap((prev) => ({ ...prev, [availabilityId]: res.data }));
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to fetch slots");
+    } finally {
+      setLoadingSlots((prev) => ({ ...prev, [availabilityId]: false }));
     }
   };
 
@@ -189,35 +243,75 @@ export default function AvailabilityPage() {
                   </tr>
                 ) : (
                   data.map((item) => (
-                    <tr key={item.id} className="border-t hover:bg-gray-50">
-                      <td className="p-3">{item.id}</td>
-                      <td className="p-3">{formatDisplayDate(item.date)}</td>
-                      <td className="p-3">{formatTime(item.startTime)}</td>
-                      <td className="p-3">{formatTime(item.endTime)}</td>
+                    <React.Fragment key={item.id}>
+                      {/* MAIN ROW */}
+                      <tr className="border-t hover:bg-gray-50">
+                        <td className="p-3">{item.id}</td>
+                        <td className="p-3">{formatDisplayDate(item.date)}</td>
+                        <td className="p-3">{formatTime(item.startTime)}</td>
+                        <td className="p-3">{formatTime(item.endTime)}</td>
 
-                      <td className="p-3">
-                        <span
-                          className={`px-2 py-1 rounded text-sm font-medium ${
-                            item.availabilityStatus === "ACTIVE"
-                              ? "bg-green-100 text-green-700"
-                              : "bg-red-100 text-red-700"
-                          }`}
-                        >
-                          {item.availabilityStatus}
-                        </span>
-                      </td>
-
-                      <td className="p-3">
-                        {item.availabilityStatus === "ACTIVE" && (
-                          <button
-                            onClick={() => deleteAvailability(item.id)}
-                            className="bg-red-500 text-white px-3 py-1 rounded-lg hover:bg-red-600"
+                        <td className="p-3">
+                          <span
+                            className={`px-2 py-1 rounded text-sm font-medium ${
+                              item.availabilityStatus === "ACTIVE"
+                                ? "bg-green-100 text-green-700"
+                                : "bg-red-100 text-red-700"
+                            }`}
                           >
-                            Delete
+                            {item.availabilityStatus}
+                          </span>
+                        </td>
+
+                        <td className="p-3 flex gap-2">
+                          {/* SLOTS TOGGLE BUTTON */}
+                          <button
+                            onClick={() => fetchSlots(item.id)}
+                            className="bg-blue-600 text-white px-3 py-1 rounded-lg hover:bg-blue-700 text-sm"
+                          >
+                            {loadingSlots[item.id]
+                              ? "Loading..."
+                              : slotsMap[item.id]
+                              ? "Hide"
+                              : "Slots"}
                           </button>
-                        )}
-                      </td>
-                    </tr>
+
+                          {/* DELETE BUTTON */}
+                          {item.availabilityStatus === "ACTIVE" && (
+                            <button
+                              onClick={() => deleteAvailability(item.id)}
+                              className="bg-red-500 text-white px-3 py-1 rounded-lg hover:bg-red-600 text-sm"
+                            >
+                              Delete
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+
+                      {/* SLOTS EXPANDED ROW */}
+                      {slotsMap[item.id] && (
+                        <tr>
+                          <td colSpan="6" className="bg-gray-50 px-4 py-3">
+                            {slotsMap[item.id].length === 0 ? (
+                              <p className="text-sm text-gray-500">No slots found.</p>
+                            ) : (
+                              <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                                {slotsMap[item.id].map((slot) => (
+                                  <div
+                                    key={slot.slotId}
+                                    className={`p-2 rounded text-center text-sm font-medium ${
+                                      slotColors[slot.slotStatus] || "bg-gray-200 text-gray-700"
+                                    }`}
+                                  >
+                                    {formatTime(slot.startTime)} – {formatTime(slot.endTime)}
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </td>
+                        </tr>
+                      )}
+                    </React.Fragment>
                   ))
                 )}
               </tbody>
@@ -251,7 +345,8 @@ export default function AvailabilityPage() {
 
       {/* ================= MODAL ================= */}
       {showModal && (
-<div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50">          <div className="bg-white rounded-xl shadow-lg w-full max-w-md p-6 relative">
+        <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl shadow-lg w-full max-w-md p-6 relative">
 
             {/* Close */}
             <button
@@ -275,29 +370,54 @@ export default function AvailabilityPage() {
 }
 
 
-
-
-
-
 // ================= FORM COMPONENT =================
 function AddAvailabilityForm({ onClose }) {
   const [form, setForm] = useState({
     date: "",
     startTime: "",
     endTime: "",
+    duration: 30,
   });
 
   const doctorId = 3;
 
+  // Generate time slots based on selected duration
+  const timeOptions = generateTimeOptions(Number(form.duration));
+
+  // End time options: only show times after the selected start time
+  const endTimeOptions = timeOptions.filter((t) => {
+    if (!form.startTime) return true;
+    return t.value > form.startTime;
+  });
+
   const handleChange = (e) => {
-    setForm({
-      ...form,
-      [e.target.name]: e.target.value,
+    const { name, value } = e.target;
+
+    setForm((prev) => {
+      const updated = { ...prev, [name]: value };
+
+      // When duration changes, reset start & end so stale values don't remain
+      if (name === "duration") {
+        updated.startTime = "";
+        updated.endTime = "";
+      }
+
+      // When start time changes, clear end time if it's no longer valid
+      if (name === "startTime" && prev.endTime && value >= prev.endTime) {
+        updated.endTime = "";
+      }
+
+      return updated;
     });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!form.startTime || !form.endTime) {
+      toast.error("Please select start and end time");
+      return;
+    }
 
     if (form.startTime >= form.endTime) {
       toast.error("End time must be after start time");
@@ -308,6 +428,7 @@ function AddAvailabilityForm({ onClose }) {
       await AvailabilityAPI.add({
         doctorId,
         ...form,
+        duration: Number(form.duration),
       });
 
       toast.success("Availability added successfully");
@@ -316,9 +437,10 @@ function AddAvailabilityForm({ onClose }) {
         date: "",
         startTime: "",
         endTime: "",
+        duration: 30,
       });
 
-      onClose(); // close modal + refresh
+      onClose();
     } catch (err) {
       console.error(err);
       toast.error("Failed to add availability");
@@ -341,28 +463,60 @@ function AddAvailabilityForm({ onClose }) {
           />
         </div>
 
+        {/* Duration first — drives the time slot dropdowns */}
+        <div>
+          <label className="text-sm font-medium">Duration (minutes)</label>
+          <select
+            name="duration"
+            value={form.duration}
+            onChange={handleChange}
+            className="w-full border px-3 py-2 rounded-lg mt-1"
+            required
+          >
+            <option value="">Select duration</option>
+            <option value={15}>15</option>
+            <option value={30}>30</option>
+            <option value={45}>45</option>
+            <option value={60}>60</option>
+          </select>
+        </div>
+
         <div>
           <label className="text-sm font-medium">Start Time</label>
-          <input
-            type="time"
+          <select
             name="startTime"
             value={form.startTime}
             onChange={handleChange}
             className="w-full border px-3 py-2 rounded-lg mt-1"
             required
-          />
+            disabled={!form.duration}
+          >
+            <option value="">Select start time</option>
+            {timeOptions.map((t) => (
+              <option key={t.value} value={t.value}>
+                {t.label}
+              </option>
+            ))}
+          </select>
         </div>
 
         <div>
           <label className="text-sm font-medium">End Time</label>
-          <input
-            type="time"
+          <select
             name="endTime"
             value={form.endTime}
             onChange={handleChange}
             className="w-full border px-3 py-2 rounded-lg mt-1"
             required
-          />
+            disabled={!form.startTime}
+          >
+            <option value="">Select end time</option>
+            {endTimeOptions.map((t) => (
+              <option key={t.value} value={t.value}>
+                {t.label}
+              </option>
+            ))}
+          </select>
         </div>
 
         <button
